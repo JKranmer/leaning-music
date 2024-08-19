@@ -58,9 +58,6 @@ body {
   > main {
     box-sizing: border-box;
     margin: 0 auto;
-    @include mq(sm) {
-      height: 500px;
-    }
     max-width: 650px;
     padding: 2rem;
     width: 100%;
