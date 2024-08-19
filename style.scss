@@ -1,0 +1,269 @@
+$success: #147914;
+$error: #791414;
+$neutral: #949494;
+$background-primary: black;
+$background-secondary: black;
+$color-primary: rgb(192, 192, 192);
+$color-secondary: white;
+
+$breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px,
+  xxxl: 1600px,
+  gigantic: 1700px,
+);
+
+@mixin mq($width, $type: min) {
+  @if map_has_key($breakpoints, $width) {
+    $width: map_get($breakpoints, $width);
+    @if $type == max {
+      $width: $width - 1px;
+    }
+    @media only screen and (#{$type}-width: $width) {
+      @content;
+    }
+  }
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: $background-primary;
+  color: $color-primary;
+  font-family: "Courier New", Courier, monospace;
+
+  .success {
+    background-color: $success;
+  }
+  .error {
+    background-color: $error;
+  }
+}
+
+.container {
+  transition: background-color 0.3s ease-out;
+  @include mq(sm) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  width: 100%;
+  min-height: 100vh;
+  > main {
+    box-sizing: border-box;
+    margin: 0 auto;
+    @include mq(sm) {
+      height: 500px;
+    }
+    max-width: 650px;
+    padding: 2rem;
+    width: 100%;
+  }
+}
+
+.pauta {
+  height: 100px;
+  width: 250px;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  position: relative;
+  margin: 1rem 0;
+  .line {
+    height: 2px;
+    width: 100%;
+    background: $color-primary;
+  }
+  .nota {
+    position: absolute;
+    width: 30px;
+    height: 25px;
+    border-radius: 100%;
+    background: $color-primary;
+    left: 50%;
+  }
+  &.out::after {
+    content: "";
+    position: absolute;
+    height: 2px;
+    width: 3rem;
+    background: $color-primary;
+    left: 46%;
+  }
+  &.top::after {
+    top: -24px;
+  }
+  &.bottom::after {
+    bottom: -24px;
+  }
+}
+
+.flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-group {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 20px;
+  @include mq(sm) {
+    max-width: 250px;
+  }
+  gap: 10px;
+}
+button {
+  padding: 10px 20px;
+  background: $color-primary;
+  color: black;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: opacity 0.3s ease-in-out;
+  &:hover {
+    opacity: 0.8;
+  }
+  &:active {
+    opacity: 0.5;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  &.start,
+  &.cancel {
+    color: white;
+    width: 100%;
+    @include mq(sm) {
+      width: auto;
+    }
+  }
+  &.start {
+    background: $success;
+  }
+  &.cancel {
+    background: $error;
+  }
+}
+
+.clave {
+  position: absolute;
+  &.sol {
+    left: -40px;
+    top: -24px;
+    width: 142px;
+  }
+
+  &.fa {
+    bottom: 25px;
+    width: 74px;
+  }
+  img {
+    width: 100%;
+    filter: invert(100%);
+  }
+}
+
+.principal-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: center;
+  gap: 2rem;
+  border: solid 2px $color-primary;
+  border-radius: 0.5rem;
+  padding: 3rem 1rem;
+  @include mq(sm) {
+    margin: 3rem 0;
+    padding: 3rem 2rem;
+  }
+  margin: 2rem 0;
+  background-color: $background-primary;
+}
+
+.score {
+  &__time {
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+  }
+  &__points {
+    font-size: 1rem;
+    @include mq(sm) {
+      font-size: 1.5rem;
+      gap: 3rem;
+    }
+    font-weight: bold;
+    text-align: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem 0;
+    &--success,
+    &--error,
+    &--status {
+      border-bottom: 2px solid $neutral;
+      padding: 0.5rem;
+      flex-grow: 1;
+    }
+    &--success {
+      border-color: $success;
+    }
+    &--error {
+      border-color: $error;
+    }
+    &--status {
+      width: 100%;
+
+      @include mq(sm) {
+        width: auto;
+      }
+    }
+  }
+}
+
+.config {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  p {
+    margin: 0;
+  }
+  select {
+    padding: 0.5rem;
+    border-radius: 5px;
+    border: none;
+    height: auto;
+    background: $color-primary;
+    color: black;
+    cursor: pointer;
+    &:hover {
+      opacity: 0.8;
+    }
+    &:active {
+      opacity: 0.5;
+    }
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+}

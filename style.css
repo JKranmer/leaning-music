@@ -1,0 +1,247 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: black;
+  color: rgb(192, 192, 192);
+  font-family: "Courier New", Courier, monospace;
+}
+html .success,
+body .success {
+  background-color: #147914;
+}
+html .error,
+body .error {
+  background-color: #791414;
+}
+
+.container {
+  transition: background-color 0.3s ease-out;
+  width: 100%;
+  min-height: 100vh;
+}
+@media only screen and (min-width: 576px) {
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+.container > main {
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 650px;
+  padding: 2rem;
+  width: 100%;
+}
+@media only screen and (min-width: 576px) {
+  .container > main {
+    height: 500px;
+  }
+}
+
+.pauta {
+  height: 100px;
+  width: 250px;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  position: relative;
+  margin: 1rem 0;
+}
+.pauta .line {
+  height: 2px;
+  width: 100%;
+  background: rgb(192, 192, 192);
+}
+.pauta .nota {
+  position: absolute;
+  width: 30px;
+  height: 25px;
+  border-radius: 100%;
+  background: rgb(192, 192, 192);
+  left: 50%;
+}
+.pauta.out::after {
+  content: "";
+  position: absolute;
+  height: 2px;
+  width: 3rem;
+  background: rgb(192, 192, 192);
+  left: 46%;
+}
+.pauta.top::after {
+  top: -24px;
+}
+.pauta.bottom::after {
+  bottom: -24px;
+}
+
+.flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-group {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+}
+@media only screen and (min-width: 576px) {
+  .btn-group {
+    max-width: 250px;
+  }
+}
+
+button {
+  padding: 10px 20px;
+  background: rgb(192, 192, 192);
+  color: black;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: opacity 0.3s ease-in-out;
+}
+button:hover {
+  opacity: 0.8;
+}
+button:active {
+  opacity: 0.5;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+button.start, button.cancel {
+  color: white;
+  width: 100%;
+}
+@media only screen and (min-width: 576px) {
+  button.start, button.cancel {
+    width: auto;
+  }
+}
+button.start {
+  background: #147914;
+}
+button.cancel {
+  background: #791414;
+}
+
+.clave {
+  position: absolute;
+}
+.clave.sol {
+  left: -40px;
+  top: -24px;
+  width: 142px;
+}
+.clave.fa {
+  bottom: 25px;
+  width: 74px;
+}
+.clave img {
+  width: 100%;
+  filter: invert(100%);
+}
+
+.principal-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  justify-content: center;
+  gap: 2rem;
+  border: solid 2px rgb(192, 192, 192);
+  border-radius: 0.5rem;
+  padding: 3rem 1rem;
+  margin: 2rem 0;
+  background-color: black;
+}
+@media only screen and (min-width: 576px) {
+  .principal-content {
+    margin: 3rem 0;
+    padding: 3rem 2rem;
+  }
+}
+
+.score__time {
+  font-size: 3rem;
+  font-weight: bold;
+  text-align: center;
+}
+.score__points {
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem 0;
+}
+@media only screen and (min-width: 576px) {
+  .score__points {
+    font-size: 1.5rem;
+    gap: 3rem;
+  }
+}
+.score__points--success, .score__points--error, .score__points--status {
+  border-bottom: 2px solid #949494;
+  padding: 0.5rem;
+  flex-grow: 1;
+}
+.score__points--success {
+  border-color: #147914;
+}
+.score__points--error {
+  border-color: #791414;
+}
+.score__points--status {
+  width: 100%;
+}
+@media only screen and (min-width: 576px) {
+  .score__points--status {
+    width: auto;
+  }
+}
+
+.config {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+.config p {
+  margin: 0;
+}
+.config select {
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: none;
+  height: auto;
+  background: rgb(192, 192, 192);
+  color: black;
+  cursor: pointer;
+}
+.config select:hover {
+  opacity: 0.8;
+}
+.config select:active {
+  opacity: 0.5;
+}
+.config select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}/*# sourceMappingURL=style.css.map */

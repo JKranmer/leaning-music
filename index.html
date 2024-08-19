@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claves</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <div class="container" :class="classFeedback">
+      <main>
+        <div>
+          <div class="config">
+            <select name="" id="" v-model="type_clave">
+              <option v-for="option in options" :key="option.value" :value="option.value">{{option.text}}</option>
+            </select>
+            <p @click="toggleCifra">
+              Cifra: {{isCifra ? 'sim': 'não'}}
+            </p>
+          </div>
+          <div class="score">
+            <h1 class="score__time">{{ time.toFixed(2)}}</h1>
+            <ul class="score__points">
+              <li class="score__points--status">{{score.success + score.error}} / {{all_position_notas.length}}</li>
+              <li class="score__points--success">Acertos: {{score.success}} </li>
+              <li class="score__points--error">Erros: {{score.error}}</li>
+            </ul>
+          </div>
+        </div>
+        <div class="flex principal-content">
+          <div class="pauta" :class="classOutPauta">
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div v-show="isStart" class="nota" :style="{top: position_notas[position_nota] + 'px'}"></div>
+            <div class="clave" :class="type_clave">
+              <img :src="`./img/clave-de-${type_clave}.svg`" :alt="`Clave de ${type_clave}`">
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button v-for="(nota, index) in notas" :key="nota.index" :disabled="!isStart" @click="choseNota(index)">
+              {{isCifra ? nota.cifra : nota.name}}
+            </button>
+          </div>
+        </div>
+        <div class="flex">
+          <button @click="toggleStart" :class="isStart ? 'cancel' : 'start'">{{isStart ? 'Cancelar' :
+            'Iniciar'}}</button>
+          <!-- <button v-show="isStart" @click="next" :disabled="mensage_end">Próximo</button> -->
+        </div>
+        <div v-show="mensage_end">
+          <h1>Fim do jogo</h1>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue
+
+    createApp({
+      setup() {
+        const isStart = ref(false);
+        const position_nota = ref(0);
+        const mensage_end = ref(false);
+        const position_notas = ref([]);
+        const classFeedback = ref('');
+        const type_clave = ref('sol');
+        const isCifra = ref(true);
+        const score = ref({ success: 0, error: 0 });
+
+        const time = ref(0.00);
+
+        const startTimer = () => {
+          time.value += 0.01;
+        }
+
+
+        const myInterval = ref(null);
+        const stopTimer = () => clearInterval(myInterval.value);
+
+        const options = [
+          { value: 'sol', text: 'Clave de Sol' },
+          { value: 'fa', text: 'Clave de Fá' }
+        ]
+
+        const all_position_notas = [
+          -47, -35, -23, -12, 0, 12, 25, 37, 49, 61, 74, 86, 98, 109, 122
+        ]
+
+        const toggleStart = () => {
+          isStart.value = !isStart.value;
+          position_notas.value = [...all_position_notas];
+          mensage_end.value = false;
+          position_nota.value = randomPosition();
+          if (isStart.value) {
+            time.value = 0.00;
+            myInterval.value = setInterval(startTimer, 10);
+          } else {
+            stopTimer();
+            score.value.success = 0;
+            score.value.error = 0;
+          }
+        };
+
+        const toggleCifra = () => {
+          isCifra.value = !isCifra.value;
+        }
+
+        const classOutPauta = computed(() => {
+          if (position_notas.value[position_nota.value] < -23)
+            return 'out top';
+          else if (position_notas.value[position_nota.value] > 108)
+            return 'out bottom';
+        })
+
+        const choseNota = (i) => {
+          if (mensage_end.value) return;
+          const response = validate(i);
+          feedBack(response);
+          setScore(response);
+          next();
+        }
+
+        const setScore = (status) => {
+          if (status)
+            score.value.success++;
+          else
+            score.value.error++;
+        }
+
+        const next = () => {
+          // deletar position_notas atual
+          if (position_notas.value.length === 1) {
+            stopTimer();
+            return mensage_end.value = true;
+          }
+          position_notas.value.splice(position_nota.value, 1);
+          position_nota.value = randomPosition();
+        };
+
+        const validate = (i) => {
+          if (type_clave.value === 'sol' && notas[i].position_sol.includes(position_notas.value[position_nota.value]))
+            return true;
+          else if (type_clave.value === 'fa' && notas[i].position_fa.includes(position_notas.value[position_nota.value]))
+            return true;
+          return false;
+        }
+
+        const feedBack = (status) => {
+          classFeedback.value = status ? 'success' : 'error';
+          setTimeout(() => {
+            classFeedback.value = '';
+          }, 200);
+        }
+
+        const isSuccess = () => {
+
+        }
+
+        // random position_notas
+        const randomPosition = () => {
+          return Math.floor(Math.random() * position_notas.value.length);
+        };
+
+        const notas = [
+          { name: 'Do', cifra: 'C', position_sol: [25, 109], position_fa: [-35, 49] },
+          { name: 'Re', cifra: 'D', position_sol: [98, 12], position_fa: [-47, 37, 122] },
+          { name: 'Mi', cifra: 'E', position_sol: [0, 86], position_fa: [25, 109] },
+          { name: 'Fa', cifra: 'F', position_sol: [74, -12], position_fa: [98, 12] },
+          { name: 'Sol', cifra: 'G', position_sol: [61, -23], position_fa: [0, 86] },
+          { name: 'La', cifra: 'A', position_sol: [-35, 49], position_fa: [74, -12] },
+          { name: 'Si', cifra: 'B', position_sol: [-47, 37, 122], position_fa: [61, -23] }
+        ];
+
+
+        onMounted(() => {
+          const body = document.querySelector("body");
+          body.addEventListener("keyup", (e) => {
+            notas.forEach((nota, index) => {
+              if (nota.cifra === e.key.toUpperCase()) {
+                choseNota(index);
+              }
+            });
+          });
+        })
+
+        return {
+          isStart,
+          toggleStart,
+          notas,
+          position_notas,
+          position_nota,
+          all_position_notas,
+          next,
+          mensage_end,
+          classOutPauta,
+          classFeedback,
+          choseNota,
+          type_clave,
+          options,
+          toggleCifra,
+          isCifra,
+          time,
+          score,
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+
+</html>
