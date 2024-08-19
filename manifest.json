@@ -5,13 +5,13 @@
     {
       "purpose": "maskable",
       "sizes": "512x512",
-      "src": "img/icon512_maskable.png",
+      "src": "/img/icon512_maskable.png",
       "type": "image/png"
     },
     {
       "purpose": "any",
       "sizes": "512x512",
-      "src": "img/icon512_rounded.png",
+      "src": "/img/icon512_rounded.png",
       "type": "image/png"
     }
   ],
@@ -20,7 +20,7 @@
   "dir": "auto",
   "lang": "pt-BR",
   "name": "Harmony",
-  "short_name": "Hmy",
+  "short_name": "Harmony",
   "start_url": "/leaning-music/",
   "scope": "/leaning-music/"
 }
