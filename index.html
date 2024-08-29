@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="user-scalable=no">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="shortcut icon" href="img/icon512_maskable.png" type="image/x-icon">
   <title>Claves</title>
@@ -19,11 +19,12 @@
       <main>
         <div>
           <div class="config">
-            <select name="" id="" v-model="type_clave">
+            <p class="pointer" @click="toggleClave">Clave de <span class="badge--success">{{type_clave}}</span></p>
+            <!-- <select name="" id="" v-model="type_clave">
               <option v-for="option in options" :key="option.value" :value="option.value">{{option.text}}</option>
-            </select>
-            <p @click="toggleCifra">
-              Cifra: {{isCifra ? 'sim': 'não'}}
+            </select> -->
+            <p @click="toggleCifra" class="pointer">
+              Cifra: <span class="badge--success">{{isCifra ? 'sim': 'não'}}</span>
             </p>
           </div>
           <div class="score">
@@ -115,6 +116,10 @@
 
         const toggleCifra = () => {
           isCifra.value = !isCifra.value;
+        }
+
+        const toggleClave = () => {
+          type_clave.value = type_clave.value === 'sol' ? 'fa' : 'sol';
         }
 
         const classOutPauta = computed(() => {
@@ -213,6 +218,7 @@
           isCifra,
           time,
           score,
+          toggleClave
         }
       }
     }).mount('#app')

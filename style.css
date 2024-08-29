@@ -3,17 +3,17 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  background: black;
+  background: #122222;
   color: rgb(192, 192, 192);
   font-family: "Courier New", Courier, monospace;
 }
 html .success,
 body .success {
-  background-color: #147914;
+  background-color: #337a7a;
 }
 html .error,
 body .error {
-  background-color: #791414;
+  background-color: #853232;
 }
 
 .container {
@@ -125,10 +125,10 @@ button.start, button.cancel {
   }
 }
 button.start {
-  background: #147914;
+  background: #337a7a;
 }
 button.cancel {
-  background: #791414;
+  background: #853232;
 }
 
 .clave {
@@ -156,11 +156,11 @@ button.cancel {
   box-sizing: border-box;
   justify-content: center;
   gap: 2rem;
-  border: solid 2px rgb(192, 192, 192);
+  border: solid 2px #1c3535;
   border-radius: 0.5rem;
   padding: 3rem 1rem;
   margin: 2rem 0;
-  background-color: black;
+  background-color: #1c3535;
 }
 @media only screen and (min-width: 576px) {
   .principal-content {
@@ -198,10 +198,10 @@ button.cancel {
   flex-grow: 1;
 }
 .score__points--success {
-  border-color: #147914;
+  border-color: #337a7a;
 }
 .score__points--error {
-  border-color: #791414;
+  border-color: #853232;
 }
 .score__points--status {
   width: 100%;
@@ -239,4 +239,20 @@ button.cancel {
 .config select:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.badge, .badge--success {
+  text-transform: uppercase;
+  padding-top: 4px;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-bottom: 2px;
+  border-radius: 0.25rem;
+}
+.badge--success {
+  background: #337a7a;
+}
+
+.pointer {
+  cursor: pointer;
 }/*# sourceMappingURL=style.css.map */
