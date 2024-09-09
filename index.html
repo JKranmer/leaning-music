@@ -20,9 +20,6 @@
         <div>
           <div class="config">
             <p class="pointer" @click="toggleClave">Clave de <span class="badge--success">{{type_clave}}</span></p>
-            <!-- <select name="" id="" v-model="type_clave">
-              <option v-for="option in options" :key="option.value" :value="option.value">{{option.text}}</option>
-            </select> -->
             <p @click="toggleCifra" class="pointer">
               Cifra: <span class="badge--success">{{isCifra ? 'sim': 'não'}}</span>
             </p>
@@ -37,18 +34,19 @@
           </div>
         </div>
         <div class="flex principal-content">
-          <div class="pauta" :class="classOutPauta">
-            <div class="line"></div>
-            <div class="line"></div>
-            <div class="line"></div>
-            <div class="line"></div>
-            <div class="line"></div>
-            <div v-show="isStart" class="nota" :style="{top: position_notas[position_nota] + 'px'}"></div>
-            <div class="clave" :class="type_clave">
-              <img :src="`./img/clave-de-${type_clave}.svg`" :alt="`Clave de ${type_clave}`">
+          <div class="space_pauta">
+            <div class="pauta" :class="classOutPauta">
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+              <div v-show="isStart" class="nota" :style="{top: position_notas[position_nota] + 'px'}"></div>
+              <div class="clave" :class="type_clave">
+                <img :src="`./img/clave-de-${type_clave}.svg`" :alt="`Clave de ${type_clave}`">
+              </div>
             </div>
           </div>
-
           <div class="btn-group">
             <button v-for="(nota, index) in notas" :key="nota.index" :disabled="!isStart" @click="choseNota(index)">
               {{isCifra ? nota.cifra : nota.name}}
@@ -96,7 +94,7 @@
         ]
 
         const all_position_notas = [
-          -47, -35, -23, -12, 0, 12, 25, 37, 49, 61, 74, 86, 98, 109, 122
+          -72, -60, -47, -35, -23, -12, 0, 12, 25, 37, 49, 61, 74, 86, 98, 109, 122, 134, 146
         ]
 
         const toggleStart = () => {
@@ -123,10 +121,18 @@
         }
 
         const classOutPauta = computed(() => {
-          if (position_notas.value[position_nota.value] < -23)
-            return 'out top';
+          let res = '';
+          if (position_notas.value[position_nota.value] < -23) {
+
+            res = 'out top';
+            if (position_notas.value[position_nota.value] < -47)
+              res = res + ' second_line';
+          }
           else if (position_notas.value[position_nota.value] > 108)
-            return 'out bottom';
+            res = 'out bottom';
+          if (position_notas.value[position_nota.value] > 122)
+            res = res + ' second_line';
+          return res;
         })
 
         const choseNota = (i) => {
@@ -179,13 +185,13 @@
         };
 
         const notas = [
-          { name: 'Do', cifra: 'C', position_sol: [25, 109], position_fa: [-35, 49] },
-          { name: 'Re', cifra: 'D', position_sol: [98, 12], position_fa: [-47, 37, 122] },
-          { name: 'Mi', cifra: 'E', position_sol: [0, 86], position_fa: [25, 109] },
-          { name: 'Fa', cifra: 'F', position_sol: [74, -12], position_fa: [98, 12] },
-          { name: 'Sol', cifra: 'G', position_sol: [61, -23], position_fa: [0, 86] },
-          { name: 'La', cifra: 'A', position_sol: [-35, 49], position_fa: [74, -12] },
-          { name: 'Si', cifra: 'B', position_sol: [-47, 37, 122], position_fa: [61, -23] }
+          { name: 'Do', cifra: 'C', position_sol: [25, 109, -60], position_fa: [-35, 49, 134] },
+          { name: 'Re', cifra: 'D', position_sol: [98, 12, -72], position_fa: [-47, 37, 122] },
+          { name: 'Mi', cifra: 'E', position_sol: [0, 86], position_fa: [25, 109, -60] },
+          { name: 'Fa', cifra: 'F', position_sol: [74, -12], position_fa: [98, 12, -72] },
+          { name: 'Sol', cifra: 'G', position_sol: [61, -23, 146], position_fa: [0, 86] },
+          { name: 'La', cifra: 'A', position_sol: [-35, 49, 134], position_fa: [74, -12] },
+          { name: 'Si', cifra: 'B', position_sol: [-47, 37, 122], position_fa: [61, -23, 146] }
         ];
 
 

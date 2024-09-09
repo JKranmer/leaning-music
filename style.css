@@ -72,6 +72,20 @@ body .error {
 .pauta.bottom::after {
   bottom: -24px;
 }
+.pauta.second_line::before {
+  content: "";
+  position: absolute;
+  height: 2px;
+  width: 3rem;
+  background: rgb(192, 192, 192);
+  left: 46%;
+}
+.pauta.top::before {
+  top: -48px;
+}
+.pauta.bottom::before {
+  bottom: -48px;
+}
 
 .flex {
   display: flex;
@@ -158,7 +172,10 @@ button.cancel {
   gap: 2rem;
   border: solid 2px #1c3535;
   border-radius: 0.5rem;
-  padding: 3rem 1rem;
+  padding-top: 3rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 1rem;
   margin: 2rem 0;
   background-color: #1c3535;
 }
@@ -255,4 +272,11 @@ button.cancel {
 
 .pointer {
   cursor: pointer;
+}
+
+.space_pauta {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  height: 150px;
 }/*# sourceMappingURL=style.css.map */
