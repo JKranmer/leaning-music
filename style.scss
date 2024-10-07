@@ -181,6 +181,11 @@ button {
     bottom: 25px;
     width: 74px;
   }
+  &.do {
+    left: 5px;
+    top: -24px;
+    width: 55px;
+  }
   img {
     width: 100%;
     filter: invert(100%);

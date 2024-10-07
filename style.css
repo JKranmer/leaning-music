@@ -157,6 +157,11 @@ button.cancel {
   bottom: 25px;
   width: 74px;
 }
+.clave.do {
+  left: 5px;
+  top: -24px;
+  width: 55px;
+}
 .clave img {
   width: 100%;
   filter: invert(100%);

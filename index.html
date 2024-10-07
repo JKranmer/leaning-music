@@ -25,7 +25,7 @@
             </p>
           </div>
           <div class="score">
-            <h1 class="score__time">{{ time.toFixed(2)}}</h1>
+            <h1 class="score__time">{{ timeFormated}}</h1>
             <ul class="score__points">
               <li class="score__points--status">{{score.success + score.error}} / {{all_position_notas.length}}</li>
               <li class="score__points--success">Acertos: {{score.success}} </li>
@@ -84,13 +84,22 @@
           time.value += 0.01;
         }
 
+        const timeProcessed = (time) => time < 10 ? `0${time}` : time;
+
+        const timeFormated = computed(() => {
+          const minutes = Math.floor((time.value % 3600) / 60);
+          const seconds = Math.floor(time.value % 60);
+          const miliseconds = Math.floor((time.value % 1) * 100);
+          return `${timeProcessed(minutes)}:${timeProcessed(seconds)}:${timeProcessed(miliseconds)}`;
+        })
 
         const myInterval = ref(null);
         const stopTimer = () => clearInterval(myInterval.value);
 
         const options = [
           { value: 'sol', text: 'Clave de Sol' },
-          { value: 'fa', text: 'Clave de Fá' }
+          { value: 'fa', text: 'Clave de Fá' },
+          { value: 'do', text: 'Clave de Dó' }
         ]
 
         const all_position_notas = [
@@ -117,7 +126,17 @@
         }
 
         const toggleClave = () => {
-          type_clave.value = type_clave.value === 'sol' ? 'fa' : 'sol';
+          switch (type_clave.value) {
+            case 'sol':
+              type_clave.value = 'fa';
+              break;
+            case 'fa':
+              type_clave.value = 'do';
+              break;
+            case 'do':
+              type_clave.value = 'sol';
+              break;
+          }
         }
 
         const classOutPauta = computed(() => {
@@ -151,7 +170,6 @@
         }
 
         const next = () => {
-          // deletar position_notas atual
           if (position_notas.value.length === 1) {
             stopTimer();
             return mensage_end.value = true;
@@ -164,6 +182,8 @@
           if (type_clave.value === 'sol' && notas[i].position_sol.includes(position_notas.value[position_nota.value]))
             return true;
           else if (type_clave.value === 'fa' && notas[i].position_fa.includes(position_notas.value[position_nota.value]))
+            return true;
+          else if (type_clave.value === 'do' && notas[i].position_do.includes(position_notas.value[position_nota.value]))
             return true;
           return false;
         }
@@ -179,19 +199,18 @@
 
         }
 
-        // random position_notas
         const randomPosition = () => {
           return Math.floor(Math.random() * position_notas.value.length);
         };
 
         const notas = [
-          { name: 'Do', cifra: 'C', position_sol: [25, 109, -60], position_fa: [-35, 49, 134] },
-          { name: 'Re', cifra: 'D', position_sol: [98, 12, -72], position_fa: [-47, 37, 122] },
-          { name: 'Mi', cifra: 'E', position_sol: [0, 86], position_fa: [25, 109, -60] },
-          { name: 'Fa', cifra: 'F', position_sol: [74, -12], position_fa: [98, 12, -72] },
-          { name: 'Sol', cifra: 'G', position_sol: [61, -23, 146], position_fa: [0, 86] },
-          { name: 'La', cifra: 'A', position_sol: [-35, 49, 134], position_fa: [74, -12] },
-          { name: 'Si', cifra: 'B', position_sol: [-47, 37, 122], position_fa: [61, -23, 146] }
+          { name: 'Do', cifra: 'C', position_sol: [25, 109, -60], position_fa: [-35, 49, 134], position_do: [98, 12, -72] },
+          { name: 'Re', cifra: 'D', position_sol: [98, 12, -72], position_fa: [-47, 37, 122], position_do: [0, 86] },
+          { name: 'Mi', cifra: 'E', position_sol: [0, 86], position_fa: [25, 109, -60], position_do: [74, -12] },
+          { name: 'Fa', cifra: 'F', position_sol: [74, -12], position_fa: [98, 12, -72], position_do: [61, -23, 146] },
+          { name: 'Sol', cifra: 'G', position_sol: [61, -23, 146], position_fa: [0, 86], position_do: [-35, 49, 134] },
+          { name: 'La', cifra: 'A', position_sol: [-35, 49, 134], position_fa: [74, -12], position_do: [-47, 37, 122] },
+          { name: 'Si', cifra: 'B', position_sol: [-47, 37, 122], position_fa: [61, -23, 146], position_do: [25, 109, -60] }
         ];
 
 
@@ -224,7 +243,8 @@
           isCifra,
           time,
           score,
-          toggleClave
+          toggleClave,
+          timeFormated
         }
       }
     }).mount('#app')
