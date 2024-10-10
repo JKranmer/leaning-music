@@ -19,7 +19,7 @@
       <main>
         <div>
           <div class="config">
-            <p class="pointer" @click="toggleClave">Clave de <span class="badge--success">{{type_clave}}</span></p>
+            <p class="pointer" @click="toggleClave">Clave de <span class="badge--success">{{type_clave.text}}</span></p>
             <p @click="toggleCifra" class="pointer">
               Cifra: <span class="badge--success">{{isCifra ? 'sim': 'não'}}</span>
             </p>
@@ -42,8 +42,8 @@
               <div class="line"></div>
               <div class="line"></div>
               <div v-show="isStart" class="nota" :style="{top: position_notas[position_nota] + 'px'}"></div>
-              <div class="clave" :class="type_clave">
-                <img :src="`./img/clave-de-${type_clave}.svg`" :alt="`Clave de ${type_clave}`">
+              <div class="clave" :class="type_clave.value">
+                <img :src="`./img/clave-de-${type_clave.url}.svg`" :alt="`Clave de ${type_clave}`">
               </div>
             </div>
           </div>
@@ -74,7 +74,13 @@
         const mensage_end = ref(false);
         const position_notas = ref([]);
         const classFeedback = ref('');
-        const type_clave = ref('sol');
+        const options = [
+          { value: 'sol', text: 'Sol', url: 'sol' },
+          { value: 'fa', text: 'Fá', url: 'fa' },
+          { value: 'do', text: 'Dó', url: 'do' },
+          { value: 'do-line-3', text: 'Dó3', url: 'do' }
+        ]
+        const type_clave = ref(options[0]);
         const isCifra = ref(true);
         const score = ref({ success: 0, error: 0 });
 
@@ -96,11 +102,7 @@
         const myInterval = ref(null);
         const stopTimer = () => clearInterval(myInterval.value);
 
-        const options = [
-          { value: 'sol', text: 'Clave de Sol' },
-          { value: 'fa', text: 'Clave de Fá' },
-          { value: 'do', text: 'Clave de Dó' }
-        ]
+
 
         const all_position_notas = [
           -72, -60, -47, -35, -23, -12, 0, 12, 25, 37, 49, 61, 74, 86, 98, 109, 122, 134, 146
@@ -126,15 +128,18 @@
         }
 
         const toggleClave = () => {
-          switch (type_clave.value) {
+          switch (type_clave.value.value) {
             case 'sol':
-              type_clave.value = 'fa';
+              type_clave.value = options[1];
+              break;
+            case 'do-line-3':
+              type_clave.value = options[0];
               break;
             case 'fa':
-              type_clave.value = 'do';
+              type_clave.value = options[2];
               break;
             case 'do':
-              type_clave.value = 'sol';
+              type_clave.value = options[3];
               break;
           }
         }
@@ -179,11 +184,13 @@
         };
 
         const validate = (i) => {
-          if (type_clave.value === 'sol' && notas[i].position_sol.includes(position_notas.value[position_nota.value]))
+          if (type_clave.value.value === 'sol' && notas[i].position_sol.includes(position_notas.value[position_nota.value]))
             return true;
-          else if (type_clave.value === 'fa' && notas[i].position_fa.includes(position_notas.value[position_nota.value]))
+          else if (type_clave.value.value === 'fa' && notas[i].position_fa.includes(position_notas.value[position_nota.value]))
             return true;
-          else if (type_clave.value === 'do' && notas[i].position_do.includes(position_notas.value[position_nota.value]))
+          else if (type_clave.value.value === 'do' && notas[i].position_do.includes(position_notas.value[position_nota.value]))
+            return true;
+          else if (type_clave.value.value === 'do-line-3' && notas[i].position_do_3.includes(position_notas.value[position_nota.value]))
             return true;
           return false;
         }
@@ -204,13 +211,13 @@
         };
 
         const notas = [
-          { name: 'Do', cifra: 'C', position_sol: [25, 109, -60], position_fa: [-35, 49, 134], position_do: [98, 12, -72] },
-          { name: 'Re', cifra: 'D', position_sol: [98, 12, -72], position_fa: [-47, 37, 122], position_do: [0, 86] },
-          { name: 'Mi', cifra: 'E', position_sol: [0, 86], position_fa: [25, 109, -60], position_do: [74, -12] },
-          { name: 'Fa', cifra: 'F', position_sol: [74, -12], position_fa: [98, 12, -72], position_do: [61, -23, 146] },
-          { name: 'Sol', cifra: 'G', position_sol: [61, -23, 146], position_fa: [0, 86], position_do: [-35, 49, 134] },
-          { name: 'La', cifra: 'A', position_sol: [-35, 49, 134], position_fa: [74, -12], position_do: [-47, 37, 122] },
-          { name: 'Si', cifra: 'B', position_sol: [-47, 37, 122], position_fa: [61, -23, 146], position_do: [25, 109, -60] }
+          { name: 'Do', cifra: 'C', position_sol: [25, 109, -60], position_fa: [-35, 49, 134], position_do: [98, 12, -72], position_do_3: [-47, 37, 122] },
+          { name: 'Re', cifra: 'D', position_sol: [98, 12, -72], position_fa: [-47, 37, 122], position_do: [0, 86], position_do_3: [25, 109, -60] },
+          { name: 'Mi', cifra: 'E', position_sol: [0, 86], position_fa: [25, 109, -60], position_do: [74, -12], position_do_3: [98, 12, -72] },
+          { name: 'Fa', cifra: 'F', position_sol: [74, -12], position_fa: [98, 12, -72], position_do: [61, -23, 146], position_do_3: [0, 86] },
+          { name: 'Sol', cifra: 'G', position_sol: [61, -23, 146], position_fa: [0, 86], position_do: [-35, 49, 134], position_do_3: [74, -12] },
+          { name: 'La', cifra: 'A', position_sol: [-35, 49, 134], position_fa: [74, -12], position_do: [-47, 37, 122], position_do_3: [61, -23, 146] },
+          { name: 'Si', cifra: 'B', position_sol: [-47, 37, 122], position_fa: [61, -23, 146], position_do: [25, 109, -60], position_do_3: [-35, 49, 134] }
         ];
 
 

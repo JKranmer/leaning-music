@@ -162,6 +162,11 @@ button.cancel {
   top: -24px;
   width: 55px;
 }
+.clave.do-line-3 {
+  left: 5px;
+  top: 1px;
+  width: 55px;
+}
 .clave img {
   width: 100%;
   filter: invert(100%);
