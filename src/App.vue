@@ -12,7 +12,7 @@ import { RouterView } from 'vue-router';
     <RouterLink to="/about">About</RouterLink>
     <RouterLink to="/chords">Cifra</RouterLink>
   </nav> -->
-  <main class="m-0 p-0 h-screen">
+  <main class="m-0 p-0 min-h-screen h-full">
     <RouterView />
   </main>
 </template>

@@ -1,11 +1,11 @@
 <template>
   <div
-    class="transition sm:flex sm:justify-center sm:items-center bg-primary-950 h-full"
+    class="transition sm:flex sm:justify-center sm:items-center bg-primary-950 h-full min-h-screen"
     :class="classFeedback"
   >
     <div class="box-border my-0 mx-auto max-w-[40.625rem] p-8 w-full">
       <div>
-        <div class="flex justify-center items-center gap-4">
+        <div class="flex justify-center items-center gap-4 flex-wrap">
           <p class="cursor-pointer m-0" @click="toggleClave">
             Clave de <badge>{{ type_clave.text }}</badge>
           </p>
@@ -13,6 +13,13 @@
             Cifra:
             <badge>{{ isCifra ? 'sim' : 'não' }}</badge>
           </p>
+          <div @click="toggleVolume" class="cursor-pointer p-4">
+            <svg-icon
+              type="mdi"
+              :path="hasVolume ? mdilVolumeHigh : mdilVolumeOff"
+            ></svg-icon>
+          </div>
+
           <!-- <p @click="toggleInterval" class="cursor-pointer m-0">
             myInterval: <badge>{{ type_interval }}</badge>
           </p> -->
@@ -53,7 +60,7 @@
         </div>
         <!-- btn group -->
         <div
-          class="flex justify-center flex-wrap items-center mt-5 sm:max-w-[15.625rem] gap-2"
+          class="flex justify-center flex-wrap items-center mt-5 gap-2 md:max-w-60"
         >
           <btn
             v-for="(nota, index) in notas"
@@ -66,12 +73,20 @@
           </btn>
         </div>
       </div>
-      <div class="flex">
+      <div class="flex gap-4">
         <btn
           @click="toggleStart"
+          class="w-full sm:w-auto"
           :background="isStart ? 'bg-rose-900' : 'bg-primary-500'"
         >
           {{ isStart ? 'Cancelar' : 'Iniciar' }}
+        </btn>
+        <btn
+          @click="repeatSynth"
+          v-if="hasVolume && name && isStart"
+          class="pt-0 pb-0"
+        >
+          <svg-icon type="mdi" :path="mdilPlay"></svg-icon>
         </btn>
       </div>
       <div v-show="message_end">
@@ -96,12 +111,18 @@ import {
   AllLabelPositionNotasDo,
   AllLabelPositionNotasDo3,
 } from '@/common/AllPositionNotas';
+import * as Tone from 'tone';
+import SvgIcon from '@jamescoyle/vue-icon';
+import { mdilVolumeHigh, mdilVolumeOff, mdilPlay } from '@mdi/light-js';
 
+const synth = new Tone.Synth().toDestination();
 const isStart = ref(false);
 const position_nota = ref(0);
 const message_end = ref(false);
 const position_notas = ref([] as [] | number[]);
 const classFeedback = ref('');
+const hasVolume = ref(false);
+const toggleVolume = () => (hasVolume.value = !hasVolume.value);
 const options_clave = [
   { value: 'sol', text: 'Sol', url: 'sol' },
   { value: 'fa', text: 'Fá', url: 'fa' },
@@ -135,6 +156,8 @@ const toggleStart = () => {
   position_notas.value = [...allPositionNotas];
   message_end.value = false;
   position_nota.value = randomPosition();
+  if (hasVolume.value) synth.triggerAttackRelease(name.value, '4n');
+
   if (isStart.value) {
     time.value = 0.0;
     myInterval.value = setInterval(startTimer, 10);
@@ -147,6 +170,10 @@ const toggleStart = () => {
 
 const toggleCifra = () => {
   isCifra.value = !isCifra.value;
+};
+
+const repeatSynth = () => {
+  if (hasVolume.value) synth.triggerAttackRelease(name.value, '4n');
 };
 
 const toggleClave = () => {
@@ -199,6 +226,7 @@ const next = () => {
   }
   position_notas.value.splice(position_nota.value, 1);
   position_nota.value = randomPosition();
+  if (hasVolume.value) synth.triggerAttackRelease(name.value, '4n');
 };
 
 const type_interval = ref(0);
