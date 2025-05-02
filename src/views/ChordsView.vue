@@ -19,6 +19,12 @@
               :path="hasVolume ? mdilVolumeHigh : mdilVolumeOff"
             ></svg-icon>
           </div>
+          <div @click="toggleAnswer" class="cursor-pointer p-4">
+            <svg-icon
+              type="mdi"
+              :path="hasAnswer ? mdilEye : mdilEyeOff"
+            ></svg-icon>
+          </div>
 
           <!-- <p @click="toggleInterval" class="cursor-pointer m-0">
             myInterval: <badge>{{ type_interval }}</badge>
@@ -39,7 +45,8 @@
               Acertos: {{ score.success }}
             </li>
             <li class="border-b-2 divide-solid border-red-800 flex-grow">
-              Erros: {{ score.error }} - {{ name }}
+              Erros: {{ score.error }}
+              <span v-if="hasAnswer && isStart">- {{ name }}</span>
             </li>
           </ul>
         </div>
@@ -113,7 +120,13 @@ import {
 } from '@/common/AllPositionNotas';
 import * as Tone from 'tone';
 import SvgIcon from '@jamescoyle/vue-icon';
-import { mdilVolumeHigh, mdilVolumeOff, mdilPlay } from '@mdi/light-js';
+import {
+  mdilVolumeHigh,
+  mdilVolumeOff,
+  mdilPlay,
+  mdilEye,
+  mdilEyeOff,
+} from '@mdi/light-js';
 
 const synth = new Tone.Synth().toDestination();
 const isStart = ref(false);
@@ -122,6 +135,8 @@ const message_end = ref(false);
 const position_notas = ref([] as [] | number[]);
 const classFeedback = ref('');
 const hasVolume = ref(false);
+const hasAnswer = ref(false);
+const toggleAnswer = () => (hasAnswer.value = !hasAnswer.value);
 const toggleVolume = () => (hasVolume.value = !hasVolume.value);
 const options_clave = [
   { value: 'sol', text: 'Sol', url: 'sol' },
