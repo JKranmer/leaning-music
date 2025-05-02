@@ -32,8 +32,7 @@
               Acertos: {{ score.success }}
             </li>
             <li class="border-b-2 divide-solid border-red-800 flex-grow">
-              Erros: {{ score.error }}
-              <!-- - {{ name }} -->
+              Erros: {{ score.error }} - {{ name }}
             </li>
           </ul>
         </div>
@@ -91,8 +90,11 @@ import Badge from '@/components/Badge.vue';
 import Btn from '@/components/Btn.vue';
 import {
   allPositionNotas,
-  // AllLabelPositionNotas,
+  AllLabelPositionNotas,
   ClaveLabel,
+  AllLabelPositionNotasFa,
+  AllLabelPositionNotasDo,
+  AllLabelPositionNotasDo3,
 } from '@/common/AllPositionNotas';
 
 const isStart = ref(false);
@@ -348,7 +350,18 @@ const positionNota = computed(() => {
   return { top: position_notas.value[position_nota.value] + 'px' };
 });
 
-// const name = computed(() => {
-//   return AllLabelPositionNotas[position_notas.value[position_nota.value]];
-// });
+const name = computed(() => {
+  const position = position_notas.value[position_nota.value];
+  switch (type_clave.value.value) {
+    case 'sol':
+      return AllLabelPositionNotas[position];
+    case 'fa':
+      return AllLabelPositionNotasFa[position];
+    case 'do':
+      return AllLabelPositionNotasDo[position];
+    case 'do-line-3':
+      return AllLabelPositionNotasDo3[position];
+  }
+  return 'Erro';
+});
 </script>
