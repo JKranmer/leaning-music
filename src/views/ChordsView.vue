@@ -13,12 +13,12 @@
             Cifra:
             <badge>{{ isCifra ? 'sim' : 'não' }}</badge>
           </p>
-          <p @click="toggleInterval" class="cursor-pointer m-0">
+          <!-- <p @click="toggleInterval" class="cursor-pointer m-0">
             myInterval: <badge>{{ type_interval }}</badge>
-          </p>
+          </p> -->
         </div>
         <div class="font-bold text-center">
-          <h1 class="text-5xl my-8">{{ timeFormated }}</h1>
+          <h1 class="text-5xl my-8">{{ timeFormatted }}</h1>
           <ul
             class="sm:text-2xl sm:gap-12 list-none m-0 p-0 flex flex-wrap justify-center gap-4"
           >
@@ -32,7 +32,8 @@
               Acertos: {{ score.success }}
             </li>
             <li class="border-b-2 divide-solid border-red-800 flex-grow">
-              Erros: {{ score.error }} - {{ name }} - {{ typeof position_nota }}
+              Erros: {{ score.error }}
+              <!-- - {{ name }} -->
             </li>
           </ul>
         </div>
@@ -69,12 +70,12 @@
       <div class="flex">
         <btn
           @click="toggleStart"
-          :babkground="isStart ? 'bg-rose-900' : 'bg-primary-500'"
+          :background="isStart ? 'bg-rose-900' : 'bg-primary-500'"
         >
           {{ isStart ? 'Cancelar' : 'Iniciar' }}
         </btn>
       </div>
-      <div v-show="mensage_end">
+      <div v-show="message_end">
         <h1>Fim do jogo</h1>
       </div>
     </div>
@@ -90,13 +91,13 @@ import Badge from '@/components/Badge.vue';
 import Btn from '@/components/Btn.vue';
 import {
   allPositionNotas,
-  AllLabelPositionNotas,
+  // AllLabelPositionNotas,
   ClaveLabel,
 } from '@/common/AllPositionNotas';
 
 const isStart = ref(false);
 const position_nota = ref(0);
-const mensage_end = ref(false);
+const message_end = ref(false);
 const position_notas = ref([] as [] | number[]);
 const classFeedback = ref('');
 const options_clave = [
@@ -117,20 +118,20 @@ const startTimer = () => {
 
 const timeProcessed = (time: number) => (time < 10 ? `0${time}` : time);
 
-const timeFormated = computed(() => {
+const timeFormatted = computed(() => {
   const minutes = Math.floor((time.value % 3600) / 60);
   const seconds = Math.floor(time.value % 60);
-  const miliseconds = Math.floor((time.value % 1) * 100);
-  return `${timeProcessed(minutes)}:${timeProcessed(seconds)}:${timeProcessed(miliseconds)}`;
+  const miliSeconds = Math.floor((time.value % 1) * 100);
+  return `${timeProcessed(minutes)}:${timeProcessed(seconds)}:${timeProcessed(miliSeconds)}`;
 });
 
-const myInterval = ref(null as any);
-const stopTimer = () => clearInterval(myInterval.value as any);
+const myInterval = ref(null as NodeJS.Timeout);
+const stopTimer = () => clearInterval(myInterval.value as NodeJS.Timeout);
 
 const toggleStart = () => {
   isStart.value = !isStart.value;
   position_notas.value = [...allPositionNotas];
-  mensage_end.value = false;
+  message_end.value = false;
   position_nota.value = randomPosition();
   if (isStart.value) {
     time.value = 0.0;
@@ -177,14 +178,11 @@ const classOutPauta = computed(() => {
 });
 
 const choseNota = (i: number) => {
-  if (mensage_end.value) return;
+  if (message_end.value) return;
   const response = typeValidation(i);
-  console.log('response', response);
   feedBack(response);
-  if (response) {
-    setScore(response);
-    next();
-  }
+  setScore(response);
+  next();
 };
 
 const setScore = (status: boolean) => {
@@ -195,22 +193,23 @@ const setScore = (status: boolean) => {
 const next = () => {
   if (position_notas.value.length === 1) {
     stopTimer();
-    return (mensage_end.value = true);
+    return (message_end.value = true);
   }
   position_notas.value.splice(position_nota.value, 1);
   position_nota.value = randomPosition();
 };
 
 const type_interval = ref(0);
-const options_interval = [
-  { value: 0, text: '0' },
-  { value: 1, text: '1' },
-];
 
-const toggleInterval = () => {
-  type_interval.value++;
-  if (type_interval.value === options_interval.length) type_interval.value = 0;
-};
+// const options_interval = [
+//   { value: 0, text: '0' },
+//   { value: 1, text: '1' },
+// ];
+
+// const toggleInterval = () => {
+//   type_interval.value++;
+//   if (type_interval.value === options_interval.length) type_interval.value = 0;
+// };
 
 const typeValidation = (i: number) => {
   if (type_interval.value === 0) return validateClave(i);
@@ -229,18 +228,13 @@ const validateInterval = (i: number) => {
       ? allPositionNotas[allPositionNotas.length - 1]
       : allPositionNotas[index - 1];
 
-  const possivelNota = notas[i][ClaveLabel[type_clave.value.value]];
-  if (!possivelNota) {
+  const possibleNote = notas[i][ClaveLabel[type_clave.value.value]];
+  if (!possibleNote) {
     console.error('Nota inválida:', notas[i]);
     return false;
   }
 
-  const res = possivelNota.includes(proximaNota);
-
-  console.log('proximaNota:', proximaNota);
-  console.log('possivelNota:', possivelNota);
-  console.log('position atual:', index);
-  console.log(allPositionNotas);
+  const res = possibleNote.includes(proximaNota);
 
   return res;
 };
@@ -285,6 +279,7 @@ const notas = [
     name: 'Do',
     cifra: 'C',
     position_sol: [25, 109, -60],
+    sol_cifra: ['C4', 'C3', 'C5'],
     position_fa: [-35, 49, 134],
     position_do: [98, 12, -72],
     position_do_3: [-47, 37, 122],
@@ -339,8 +334,9 @@ const notas = [
   },
 ];
 
-const body = document.querySelector('body') as any;
-body.addEventListener('keyup', (e: any) => {
+const body = document.querySelector('body') as HTMLBodyElement;
+body.addEventListener('keyup', (e: { key: string }) => {
+  console.log(e);
   notas.forEach((nota, index) => {
     if (nota.cifra === e.key.toUpperCase()) {
       choseNota(index);
@@ -352,7 +348,7 @@ const positionNota = computed(() => {
   return { top: position_notas.value[position_nota.value] + 'px' };
 });
 
-const name = computed(() => {
-  return AllLabelPositionNotas[position_notas.value[position_nota.value]];
-});
+// const name = computed(() => {
+//   return AllLabelPositionNotas[position_notas.value[position_nota.value]];
+// });
 </script>
