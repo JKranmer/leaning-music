@@ -19,7 +19,7 @@ export default defineConfig({
         theme_color: '#ffffff',
         background_color: '##12222200',
         display: 'standalone',
-        start_url: '/',
+        start_url: '/leaning-music/',
         icons: [
           {
             src: 'icon512_maskable.png',
