@@ -1,323 +1,248 @@
 <template>
-  <div
-    class="transition sm:flex sm:justify-center sm:items-center bg-primary-950 h-full min-h-screen"
-    :class="classFeedback"
+  <GameContainer
+    :validation-result="validationResult"
+    @validate-note="handleValidateNote"
   >
-    <div class="box-border my-0 mx-auto max-w-[40.625rem] p-8 w-full">
-      <div>
-        <div class="flex justify-center items-center gap-4 flex-wrap">
-          <p class="cursor-pointer m-0" @click="toggleClave">
-            Clave de <badge>{{ typeClave.text }}</badge>
-          </p>
-          <p @click="toggleCifra" class="cursor-pointer m-0">
-            Cifra:
-            <badge>{{ isCifra ? 'sim' : 'não' }}</badge>
-          </p>
-          <div @click="toggleVolume" class="cursor-pointer p-4">
-            <svg-icon
-              type="mdi"
-              :path="hasVolume ? mdilVolumeHigh : mdilVolumeOff"
-            ></svg-icon>
-          </div>
-          <div @click="toggleAnswer" class="cursor-pointer p-4">
-            <svg-icon
-              type="mdi"
-              :path="hasAnswer ? mdilEye : mdilEyeOff"
-            ></svg-icon>
-          </div>
-
-          <!-- <p @click="toggleInterval" class="cursor-pointer m-0">
-            myInterval: <badge>{{ type_interval }}</badge>
-          </p> -->
-        </div>
-        <div class="font-bold text-center">
-          <h1 class="text-5xl my-8">{{ timeFormatted }}</h1>
-          <ul
-            class="sm:text-2xl sm:gap-12 list-none m-0 p-0 flex flex-wrap justify-center gap-4"
-          >
-            <li
-              class="border-b-2 divide-solid border-stone-500 flex-grow w-full md:w-auto"
-            >
-              {{ score.success + score.error }} /
-              {{ allPositionNotas.length }}
-            </li>
-            <li class="border-b-2 divide-solid border-green-800 flex-grow">
-              Acertos: {{ score.success }}
-            </li>
-            <li class="border-b-2 divide-solid border-red-800 flex-grow">
-              Erros: {{ score.error }}
-              <span v-if="hasAnswer && isStart">- {{ name }}</span>
-            </li>
-          </ul>
-        </div>
-      </div>
+    <template
+      #default="{
+        gameState,
+        timer,
+        audio,
+        score,
+        feedback,
+        gameSettings,
+        noteName,
+        toggleStart,
+        onNoteSelected,
+        repeatSynth,
+      }"
+    >
       <div
-        class="flex flex-wrap w-full box-border justify-center gap-8 border-2 border-primary-900 rounded-lg pt-12 pb-4 pl-4 pr-4 sm:px-12 sm:py-8 bg-primary-900 my-12"
+        class="transition sm:flex sm:justify-center sm:items-center bg-primary-950 h-full min-h-screen"
+        :class="feedback.classFeedback.value"
       >
-        <div class="flex justify-center flex-col h-[9.375rem]">
-          <Staff :class="classOutPauta">
-            <MusicalNote v-show="isStart" :position="positionNota" />
-            <ChordsType
-              class="absolute"
-              :class="typeClave.value"
-              :src="typeClave.url"
-              :type="typeClave.value"
+        <div class="box-border my-0 mx-auto max-w-[40.625rem] p-8 w-full">
+          <div>
+            <GameSettings
+              :type-clave="typeClave"
+              :is-cifra="isCifra"
+              :has-volume="audio.hasVolume.value"
+              :has-answer="gameSettings.hasAnswer.value"
+              @toggle-clave="toggleClave"
+              @toggle-cifra="toggleCifra"
+              @toggle-volume="audio.toggleVolume"
+              @toggle-answer="gameSettings.toggleAnswer"
             />
-          </Staff>
-        </div>
-        <!-- btn group -->
-        <div
-          class="flex justify-center flex-wrap items-center mt-5 gap-2 md:max-w-60"
-        >
-          <btn
-            v-for="(nota, index) in notas"
-            :key="index"
-            :disabled="!isStart"
-            @click="choseNota(index)"
-            class="w-auto"
+
+            <ScoreBoard
+              :time-formatted="timer.timeFormatted.value"
+              :score="score.score.value"
+              :total-notes="allPositionNotas.length"
+              :has-answer="gameSettings.hasAnswer.value"
+              :is-start="gameState.isStart.value"
+              :current-note-name="
+                noteName.getNoteName(
+                  gameState.gameState.value.currentPosition,
+                  typeClave.value,
+                )
+              "
+            />
+          </div>
+          <div
+            class="flex flex-wrap w-full box-border justify-center gap-8 border-2 border-primary-900 rounded-lg pt-12 pb-4 pl-4 pr-4 sm:px-12 sm:py-8 bg-primary-900 my-12"
           >
-            {{ isCifra ? nota.cifra : nota.name }}
-          </btn>
+            <div class="flex justify-center flex-col h-[9.375rem]">
+              <Staff :class="gameState.classOutPauta.value">
+                <MusicalNote
+                  v-show="gameState.isStart.value"
+                  :position="gameState.positionNotaStyle.value"
+                />
+                <ChordsType
+                  class="absolute"
+                  :class="typeClave.value"
+                  :src="typeClave.url"
+                  :type="typeClave.value"
+                />
+              </Staff>
+            </div>
+            <!-- btn group -->
+            <NotesButtonGroup
+              :is-start="gameState.isStart.value"
+              :is-cifra="isCifra"
+              @note-selected="onNoteSelected"
+            />
+          </div>
+          <div class="flex gap-4">
+            <btn
+              @click="toggleStart"
+              class="w-full sm:w-auto"
+              :background="
+                gameState.isStart.value ? 'bg-rose-900' : 'bg-primary-500'
+              "
+            >
+              {{ gameState.isStart.value ? 'Cancelar' : 'Iniciar' }}
+            </btn>
+            <btn
+              @click="repeatSynth"
+              v-if="
+                audio.hasVolume.value &&
+                noteName.getNoteName(
+                  gameState.gameState.value.currentPosition,
+                  typeClave.value,
+                ) &&
+                gameState.isStart.value
+              "
+              class="pt-0 pb-0"
+            >
+              <svg-icon type="mdi" :path="mdilPlay"></svg-icon>
+            </btn>
+          </div>
+          <div v-show="gameState.messageEnd.value">
+            <h1>Fim do jogo</h1>
+          </div>
         </div>
       </div>
-      <div class="flex gap-4">
-        <btn
-          @click="toggleStart"
-          class="w-full sm:w-auto"
-          :background="isStart ? 'bg-rose-900' : 'bg-primary-500'"
-        >
-          {{ isStart ? 'Cancelar' : 'Iniciar' }}
-        </btn>
-        <btn
-          @click="repeatSynth"
-          v-if="hasVolume && name && isStart"
-          class="pt-0 pb-0"
-        >
-          <svg-icon type="mdi" :path="mdilPlay"></svg-icon>
-        </btn>
-      </div>
-      <div v-show="message_end">
-        <h1>Fim do jogo</h1>
-      </div>
-    </div>
-  </div>
+    </template>
+  </GameContainer>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
+import GameContainer from '@/components/GameContainer.vue';
 import MusicalNote from '@/components/MusicalNote.vue';
 import ChordsType from '@/components/ChordsType.vue';
 import Staff from '@/components/Staff.vue';
-import Badge from '@/components/Badge.vue';
+import GameSettings from '@/components/GameSettings.vue';
+import ScoreBoard from '@/components/ScoreBoard.vue';
 import Btn from '@/components/Btn.vue';
-import {
-  allPositionNotas,
-  AllLabelPositionNotas,
-  ClaveLabel,
-  AllLabelPositionNotasFa,
-  AllLabelPositionNotasDo,
-  AllLabelPositionNotasDo3,
-  notas,
-} from '@/common/AllPositionNotas';
-import * as Tone from 'tone';
+import NotesButtonGroup from '@/components/NotesButtonGroup.vue';
+import { allPositionNotas, ClaveLabel, notas } from '@/common/AllPositionNotas';
 import SvgIcon from '@jamescoyle/vue-icon';
-import {
-  mdilVolumeHigh,
-  mdilVolumeOff,
-  mdilPlay,
-  mdilEye,
-  mdilEyeOff,
-} from '@mdi/light-js';
+import { mdilPlay } from '@mdi/light-js';
 import { useChords } from '@/hooks/useChords';
 
 const { toggleClave, typeClave, toggleCifra, isCifra } = useChords();
 
-const synth = new Tone.Synth().toDestination();
-const isStart = ref(false);
-const position_nota = ref(0);
-const message_end = ref(false);
-const position_notas = ref([] as [] | number[]);
-const classFeedback = ref('');
-const hasVolume = ref(false);
-const hasAnswer = ref(false);
-const toggleAnswer = () => (hasAnswer.value = !hasAnswer.value);
-const toggleVolume = () => (hasVolume.value = !hasVolume.value);
-const score = ref({ success: 0, error: 0 });
+// Estado da validação
+const validationResult = ref<{ isValid: boolean; error?: string } | null>(null);
 
-const time = ref(0.0);
+// Tipos para melhor type safety
+interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+}
 
-const startTimer = () => {
-  time.value += 0.01;
-};
+interface GameState {
+  isGameActive: boolean;
+  currentPosition: number;
+  availablePositions: number[];
+}
 
-const timeProcessed = (time: number) => (time < 10 ? `0${time}` : time);
+// Constantes para validação
+const VALIDATION_MODES = {
+  CLAVE: 0,
+  INTERVAL: 1,
+} as const;
 
-const timeFormatted = computed(() => {
-  const minutes = Math.floor((time.value % 3600) / 60);
-  const seconds = Math.floor(time.value % 60);
-  const miliSeconds = Math.floor((time.value % 1) * 100);
-  return `${timeProcessed(minutes)}:${timeProcessed(seconds)}:${timeProcessed(miliSeconds)}`;
-});
+const type_interval = ref(VALIDATION_MODES.CLAVE);
 
-const myInterval = ref(null as NodeJS.Timeout);
-const stopTimer = () => clearInterval(myInterval.value as NodeJS.Timeout);
+// Função principal de validação chamada pelo GameContainer
+const handleValidateNote = (
+  noteIndex: number,
+  gameState: GameState,
+  claveType: string,
+): void => {
+  const result = validateNoteSelection(noteIndex, gameState, claveType);
+  validationResult.value = result;
 
-const toggleStart = () => {
-  isStart.value = !isStart.value;
-  position_notas.value = [...allPositionNotas];
-  message_end.value = false;
-  position_nota.value = randomPosition();
-  if (hasVolume.value) synth.triggerAttackRelease(name.value, '4n');
-
-  if (isStart.value) {
-    time.value = 0.0;
-    myInterval.value = setInterval(startTimer, 10);
-  } else {
-    stopTimer();
-    score.value.success = 0;
-    score.value.error = 0;
-  }
-};
-
-const repeatSynth = () => {
-  if (hasVolume.value) synth.triggerAttackRelease(name.value, '4n');
-};
-
-const classOutPauta = computed(() => {
-  let res = '';
-  if (position_notas.value[position_nota.value] < -23) {
-    res = 'out top';
-    if (position_notas.value[position_nota.value] < -47)
-      res = res + ' second_line';
-  } else if (position_notas.value[position_nota.value] > 108)
-    res = 'out bottom';
-  if (position_notas.value[position_nota.value] > 122)
-    res = res + ' second_line';
-  return res;
-});
-
-const choseNota = (i: number) => {
-  if (message_end.value) return;
-  const response = typeValidation(i);
-  feedBack(response);
-  setScore(response);
-  next();
-};
-
-const setScore = (status: boolean) => {
-  if (status) score.value.success++;
-  else score.value.error++;
-};
-
-const next = () => {
-  if (position_notas.value.length === 1) {
-    stopTimer();
-    return (message_end.value = true);
-  }
-  position_notas.value.splice(position_nota.value, 1);
-  position_nota.value = randomPosition();
-  if (hasVolume.value) synth.triggerAttackRelease(name.value, '4n');
-};
-
-const type_interval = ref(0);
-
-// const options_interval = [
-//   { value: 0, text: '0' },
-//   { value: 1, text: '1' },
-// ];
-
-// const toggleInterval = () => {
-//   type_interval.value++;
-//   if (type_interval.value === options_interval.length) type_interval.value = 0;
-// };
-
-const typeValidation = (i: number) => {
-  if (type_interval.value === 0) return validateClave(i);
-  return validateInterval(i);
-};
-
-const validateInterval = (i: number) => {
-  const index = Object.values(allPositionNotas).indexOf(
-    position_notas.value[position_nota.value],
-  );
-  // Obtém a nota anterior usando position_nota como referência
-  const proximaNota =
-    allPositionNotas[index - 1] === undefined
-      ? allPositionNotas[allPositionNotas.length - 1]
-      : allPositionNotas[index - 1];
-
-  const possibleNote = notas[i][ClaveLabel[typeClave.value.value]];
-  if (!possibleNote) {
-    console.error('Nota inválida:', notas[i]);
-    return false;
-  }
-
-  const res = possibleNote.includes(proximaNota);
-
-  return res;
-};
-
-const validateClave = (i: number) => {
-  if (
-    typeClave.value.value === 'sol' &&
-    notas[i].position_sol.includes(position_notas.value[position_nota.value])
-  )
-    return true;
-  else if (
-    typeClave.value.value === 'fa' &&
-    notas[i].position_fa.includes(position_notas.value[position_nota.value])
-  )
-    return true;
-  else if (
-    typeClave.value.value === 'do' &&
-    notas[i].position_do.includes(position_notas.value[position_nota.value])
-  )
-    return true;
-  else if (
-    typeClave.value.value === 'do-line-3' &&
-    notas[i].position_do_3.includes(position_notas.value[position_nota.value])
-  )
-    return true;
-  return false;
-};
-
-const feedBack = (status: boolean) => {
-  classFeedback.value = status ? 'bg-teal-950' : 'bg-rose-950';
+  // Limpar o resultado após processar
   setTimeout(() => {
-    classFeedback.value = '';
-  }, 200);
+    validationResult.value = null;
+  }, 100);
 };
 
-const randomPosition = () => {
-  return Math.floor(Math.random() * position_notas.value.length);
-};
-
-const body = document.querySelector('body') as HTMLBodyElement;
-body.addEventListener('keyup', (e: { key: string }) => {
-  console.log(e);
-  notas.forEach((nota, index) => {
-    if (nota.cifra === e.key.toUpperCase()) {
-      choseNota(index);
-    }
-  });
-});
-
-const positionNota = computed(() => {
-  return { top: position_notas.value[position_nota.value] + 'px' };
-});
-
-const name = computed(() => {
-  const position = position_notas.value[position_nota.value];
-  switch (typeClave.value.value) {
-    case 'sol':
-      return AllLabelPositionNotas[position];
-    case 'fa':
-      return AllLabelPositionNotasFa[position];
-    case 'do':
-      return AllLabelPositionNotasDo[position];
-    case 'do-line-3':
-      return AllLabelPositionNotasDo3[position];
+// Validação principal com melhor estrutura
+const validateNoteSelection = (
+  noteIndex: number,
+  gameState: GameState,
+  claveType: string,
+): ValidationResult => {
+  if (!isValidNoteIndex(noteIndex)) {
+    return {
+      isValid: false,
+      error: `Índice de nota inválido: ${noteIndex}`,
+    };
   }
-  return 'Erro';
-});
+
+  if (!gameState.currentPosition && gameState.currentPosition !== 0) {
+    return {
+      isValid: false,
+      error: 'Posição atual da nota não definida',
+    };
+  }
+
+  try {
+    const isValid =
+      type_interval.value === VALIDATION_MODES.CLAVE
+        ? validateClaveNote(noteIndex, gameState.currentPosition, claveType)
+        : validateIntervalNote(noteIndex, gameState.currentPosition, claveType);
+
+    return { isValid };
+  } catch (error) {
+    return {
+      isValid: false,
+      error: `Erro durante validação: ${error}`,
+    };
+  }
+};
+
+// Validação de nota por clave - refatorada para ser mais limpa
+const validateClaveNote = (
+  noteIndex: number,
+  currentPosition: number,
+  claveType: string,
+): boolean => {
+  const selectedNote = notas[noteIndex];
+
+  const positionProperty = ClaveLabel[claveType] as keyof typeof selectedNote;
+
+  if (!positionProperty || !selectedNote[positionProperty]) {
+    throw new Error(`Propriedade de posição inválida para clave ${claveType}`);
+  }
+
+  const validPositions = selectedNote[positionProperty] as number[];
+  return validPositions.includes(currentPosition);
+};
+
+// Validação de intervalo - melhorada com melhor lógica
+const validateIntervalNote = (
+  noteIndex: number,
+  currentPosition: number,
+  claveType: string,
+): boolean => {
+  const currentIndex = allPositionNotas.indexOf(currentPosition);
+
+  if (currentIndex === -1) {
+    throw new Error('Posição atual não encontrada no array de posições');
+  }
+
+  const previousIndex =
+    currentIndex === 0 ? allPositionNotas.length - 1 : currentIndex - 1;
+
+  const previousPosition = allPositionNotas[previousIndex];
+  const selectedNote = notas[noteIndex];
+  const claveProperty = ClaveLabel[claveType] as keyof typeof selectedNote;
+
+  if (!selectedNote[claveProperty]) {
+    throw new Error(`Propriedade ${claveProperty} não encontrada na nota`);
+  }
+
+  const validPositions = selectedNote[claveProperty] as number[];
+  return validPositions.includes(previousPosition);
+};
+
+// Funções auxiliares
+const isValidNoteIndex = (index: number): boolean => {
+  return index >= 0 && index < notas.length;
+};
 </script>
