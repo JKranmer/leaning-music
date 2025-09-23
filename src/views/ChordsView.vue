@@ -7,7 +7,7 @@
       <div>
         <div class="flex justify-center items-center gap-4 flex-wrap">
           <p class="cursor-pointer m-0" @click="toggleClave">
-            Clave de <badge>{{ type_clave.text }}</badge>
+            Clave de <badge>{{ typeClave.text }}</badge>
           </p>
           <p @click="toggleCifra" class="cursor-pointer m-0">
             Cifra:
@@ -59,9 +59,9 @@
             <MusicalNote v-show="isStart" :position="positionNota" />
             <ChordsType
               class="absolute"
-              :class="type_clave.value"
-              :src="type_clave.url"
-              :type="type_clave.value"
+              :class="typeClave.value"
+              :src="typeClave.url"
+              :type="typeClave.value"
             />
           </Staff>
         </div>
@@ -117,6 +117,7 @@ import {
   AllLabelPositionNotasFa,
   AllLabelPositionNotasDo,
   AllLabelPositionNotasDo3,
+  notas,
 } from '@/common/AllPositionNotas';
 import * as Tone from 'tone';
 import SvgIcon from '@jamescoyle/vue-icon';
@@ -127,6 +128,9 @@ import {
   mdilEye,
   mdilEyeOff,
 } from '@mdi/light-js';
+import { useChords } from '@/hooks/useChords';
+
+const { toggleClave, typeClave, toggleCifra, isCifra } = useChords();
 
 const synth = new Tone.Synth().toDestination();
 const isStart = ref(false);
@@ -138,14 +142,6 @@ const hasVolume = ref(false);
 const hasAnswer = ref(false);
 const toggleAnswer = () => (hasAnswer.value = !hasAnswer.value);
 const toggleVolume = () => (hasVolume.value = !hasVolume.value);
-const options_clave = [
-  { value: 'sol', text: 'Sol', url: 'sol' },
-  { value: 'fa', text: 'Fá', url: 'fa' },
-  { value: 'do', text: 'Dó', url: 'do' },
-  { value: 'do-line-3', text: 'Dó3', url: 'do' },
-];
-const type_clave = ref(options_clave[0]);
-const isCifra = ref(true);
 const score = ref({ success: 0, error: 0 });
 
 const time = ref(0.0);
@@ -183,29 +179,8 @@ const toggleStart = () => {
   }
 };
 
-const toggleCifra = () => {
-  isCifra.value = !isCifra.value;
-};
-
 const repeatSynth = () => {
   if (hasVolume.value) synth.triggerAttackRelease(name.value, '4n');
-};
-
-const toggleClave = () => {
-  switch (type_clave.value.value) {
-    case 'sol':
-      type_clave.value = options_clave[1];
-      break;
-    case 'do-line-3':
-      type_clave.value = options_clave[0];
-      break;
-    case 'fa':
-      type_clave.value = options_clave[2];
-      break;
-    case 'do':
-      type_clave.value = options_clave[3];
-      break;
-  }
 };
 
 const classOutPauta = computed(() => {
@@ -262,18 +237,16 @@ const typeValidation = (i: number) => {
 };
 
 const validateInterval = (i: number) => {
-  console.log(position_notas.value[position_nota.value]);
   const index = Object.values(allPositionNotas).indexOf(
     position_notas.value[position_nota.value],
   );
-  console.log(allPositionNotas[index - 1]);
   // Obtém a nota anterior usando position_nota como referência
   const proximaNota =
     allPositionNotas[index - 1] === undefined
       ? allPositionNotas[allPositionNotas.length - 1]
       : allPositionNotas[index - 1];
 
-  const possibleNote = notas[i][ClaveLabel[type_clave.value.value]];
+  const possibleNote = notas[i][ClaveLabel[typeClave.value.value]];
   if (!possibleNote) {
     console.error('Nota inválida:', notas[i]);
     return false;
@@ -286,22 +259,22 @@ const validateInterval = (i: number) => {
 
 const validateClave = (i: number) => {
   if (
-    type_clave.value.value === 'sol' &&
+    typeClave.value.value === 'sol' &&
     notas[i].position_sol.includes(position_notas.value[position_nota.value])
   )
     return true;
   else if (
-    type_clave.value.value === 'fa' &&
+    typeClave.value.value === 'fa' &&
     notas[i].position_fa.includes(position_notas.value[position_nota.value])
   )
     return true;
   else if (
-    type_clave.value.value === 'do' &&
+    typeClave.value.value === 'do' &&
     notas[i].position_do.includes(position_notas.value[position_nota.value])
   )
     return true;
   else if (
-    type_clave.value.value === 'do-line-3' &&
+    typeClave.value.value === 'do-line-3' &&
     notas[i].position_do_3.includes(position_notas.value[position_nota.value])
   )
     return true;
@@ -319,66 +292,6 @@ const randomPosition = () => {
   return Math.floor(Math.random() * position_notas.value.length);
 };
 
-const notas = [
-  {
-    name: 'Do',
-    cifra: 'C',
-    position_sol: [25, 109, -60],
-    sol_cifra: ['C4', 'C3', 'C5'],
-    position_fa: [-35, 49, 134],
-    position_do: [98, 12, -72],
-    position_do_3: [-47, 37, 122],
-  },
-  {
-    name: 'Re',
-    cifra: 'D',
-    position_sol: [98, 12, -72],
-    position_fa: [-47, 37, 122],
-    position_do: [0, 86],
-    position_do_3: [25, 109, -60],
-  },
-  {
-    name: 'Mi',
-    cifra: 'E',
-    position_sol: [0, 86],
-    position_fa: [25, 109, -60],
-    position_do: [74, -12],
-    position_do_3: [98, 12, -72],
-  },
-  {
-    name: 'Fa',
-    cifra: 'F',
-    position_sol: [74, -12],
-    position_fa: [98, 12, -72],
-    position_do: [61, -23, 146],
-    position_do_3: [0, 86],
-  },
-  {
-    name: 'Sol',
-    cifra: 'G',
-    position_sol: [61, -23, 146],
-    position_fa: [0, 86],
-    position_do: [-35, 49, 134],
-    position_do_3: [74, -12],
-  },
-  {
-    name: 'La',
-    cifra: 'A',
-    position_sol: [-35, 49, 134],
-    position_fa: [74, -12],
-    position_do: [-47, 37, 122],
-    position_do_3: [61, -23, 146],
-  },
-  {
-    name: 'Si',
-    cifra: 'B',
-    position_sol: [-47, 37, 122],
-    position_fa: [61, -23, 146],
-    position_do: [25, 109, -60],
-    position_do_3: [-35, 49, 134],
-  },
-];
-
 const body = document.querySelector('body') as HTMLBodyElement;
 body.addEventListener('keyup', (e: { key: string }) => {
   console.log(e);
@@ -395,7 +308,7 @@ const positionNota = computed(() => {
 
 const name = computed(() => {
   const position = position_notas.value[position_nota.value];
-  switch (type_clave.value.value) {
+  switch (typeClave.value.value) {
     case 'sol':
       return AllLabelPositionNotas[position];
     case 'fa':

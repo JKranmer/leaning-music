@@ -97,3 +97,63 @@ export enum AllLabelPositionNotasDo3 {
   D5 = -60,
   E5 = -72,
 }
+
+export const notas = [
+  {
+    name: 'Do',
+    cifra: 'C',
+    position_sol: [25, 109, -60],
+    sol_cifra: ['C4', 'C3', 'C5'],
+    position_fa: [-35, 49, 134],
+    position_do: [98, 12, -72],
+    position_do_3: [-47, 37, 122],
+  },
+  {
+    name: 'Re',
+    cifra: 'D',
+    position_sol: [98, 12, -72],
+    position_fa: [-47, 37, 122],
+    position_do: [0, 86],
+    position_do_3: [25, 109, -60],
+  },
+  {
+    name: 'Mi',
+    cifra: 'E',
+    position_sol: [0, 86],
+    position_fa: [25, 109, -60],
+    position_do: [74, -12],
+    position_do_3: [98, 12, -72],
+  },
+  {
+    name: 'Fa',
+    cifra: 'F',
+    position_sol: [74, -12],
+    position_fa: [98, 12, -72],
+    position_do: [61, -23, 146],
+    position_do_3: [0, 86],
+  },
+  {
+    name: 'Sol',
+    cifra: 'G',
+    position_sol: [61, -23, 146],
+    position_fa: [0, 86],
+    position_do: [-35, 49, 134],
+    position_do_3: [74, -12],
+  },
+  {
+    name: 'La',
+    cifra: 'A',
+    position_sol: [-35, 49, 134],
+    position_fa: [74, -12],
+    position_do: [-47, 37, 122],
+    position_do_3: [61, -23, 146],
+  },
+  {
+    name: 'Si',
+    cifra: 'B',
+    position_sol: [-47, 37, 122],
+    position_fa: [61, -23, 146],
+    position_do: [25, 109, -60],
+    position_do_3: [-35, 49, 134],
+  },
+];
