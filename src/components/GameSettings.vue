@@ -7,6 +7,10 @@
       Cifra:
       <badge>{{ isCifra ? 'sim' : 'não' }}</badge>
     </p>
+    <p class="cursor-pointer m-0" @click="handleToggleDifficulty">
+      Dificuldade:
+      <badge>{{ currentDifficulty.text }}</badge>
+    </p>
     <div @click="handleToggleVolume" class="cursor-pointer p-4">
       <svg-icon
         type="mdi"
@@ -34,6 +38,7 @@ interface Props {
   isCifra: boolean;
   hasVolume: boolean;
   hasAnswer: boolean;
+  currentDifficulty: { value: string; text: string; description: string };
 }
 
 interface Emits {
@@ -41,6 +46,7 @@ interface Emits {
   (e: 'toggle-cifra'): void;
   (e: 'toggle-volume'): void;
   (e: 'toggle-answer'): void;
+  (e: 'toggle-difficulty'): void;
 }
 
 defineProps<Props>();
@@ -50,4 +56,5 @@ const handleToggleClave = () => emit('toggle-clave');
 const handleToggleCifra = () => emit('toggle-cifra');
 const handleToggleVolume = () => emit('toggle-volume');
 const handleToggleAnswer = () => emit('toggle-answer');
+const handleToggleDifficulty = () => emit('toggle-difficulty');
 </script>

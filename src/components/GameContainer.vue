@@ -35,6 +35,8 @@ const emit = defineEmits<{
 // Props para receber resultado da validação
 const props = defineProps<{
   validationResult?: { isValid: boolean; error?: string };
+  useCustomEndGameLogic?: boolean;
+  totalExercises?: number;
 }>();
 
 const timer = useTimer();
@@ -121,6 +123,22 @@ watch(
 );
 
 const proceedToNextNote = (): void => {
+  // Se está usando lógica customizada (para acordes)
+  if (props.useCustomEndGameLogic && props.totalExercises) {
+    const totalAttempts = score.score.value.success + score.score.value.error;
+
+    if (totalAttempts >= props.totalExercises) {
+      timer.stopTimer();
+      gameState.messageEnd.value = true;
+      return;
+    }
+
+    // Para lógica customizada, não chamamos gameState.proceedToNextNote()
+    // pois a navegação é controlada pela view
+    return;
+  }
+
+  // Lógica original para notas individuais
   const remainingNotes = gameState.gameState.value.availablePositions.length;
 
   if (remainingNotes === 1) {
