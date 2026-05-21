@@ -27,9 +27,15 @@ import { useNoteName } from '@/hooks/useNoteName.js';
 import { useKeyboardInput } from '@/hooks/useKeyboardInput.js';
 import { useChords } from '@/hooks/useChords';
 
+interface GameState {
+  isGameActive: boolean;
+  currentPosition: number;
+  availablePositions: number[];
+}
+
 // Emits para comunicar com componente pai sobre a validação
 const emit = defineEmits<{
-  validateNote: [noteIndex: number, gameState: object, claveType: string];
+  validateNote: [noteIndex: number, gameState: GameState, claveType: string];
 }>();
 
 // Props para receber resultado da validação

@@ -130,10 +130,14 @@ import GameSettings from '@/components/GameSettings.vue';
 import ScoreBoard from '@/components/ScoreBoard.vue';
 import Btn from '@/components/Btn.vue';
 import NotesButtonGroup from '@/components/NotesButtonGroup.vue';
-import { allPositionNotas, ClaveLabel, notas } from '@/common/AllPositionNotas';
+import {
+  allPositionNotas,
+  ClaveLabel,
+  notas,
+} from '@/common/AllPositionNotas.js';
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdilPlay } from '@mdi/light-js';
-import { useChords } from '@/hooks/useChords';
+import { useChords } from '@/hooks/useChords.js';
 
 const {
   toggleClave,
@@ -147,7 +151,9 @@ const {
 } = useChords();
 
 // Estado da validação
-const validationResult = ref<{ isValid: boolean; error?: string } | null>(null);
+const validationResult = ref<{ isValid: boolean; error?: string } | undefined>(
+  undefined,
+);
 
 // Tipos para melhor type safety
 interface ValidationResult {
@@ -167,7 +173,7 @@ const VALIDATION_MODES = {
   INTERVAL: 1,
 } as const;
 
-const type_interval = ref(VALIDATION_MODES.CLAVE);
+const type_interval = ref<0 | 1>(VALIDATION_MODES.CLAVE);
 const isIntervalMode = computed(
   () => type_interval.value === VALIDATION_MODES.INTERVAL,
 );
@@ -188,7 +194,7 @@ const handleValidateNote = (
 
   // Limpar o resultado após processar e regenerar intervalo para a próxima nota
   setTimeout(() => {
-    validationResult.value = null;
+    validationResult.value = undefined;
     if (isIntervalMode.value) regenerateInterval();
   }, 100);
 };
@@ -236,7 +242,9 @@ const validateClaveNote = (
 ): boolean => {
   const selectedNote = notas[noteIndex];
 
-  const positionProperty = ClaveLabel[claveType] as keyof typeof selectedNote;
+  const positionProperty = ClaveLabel[
+    claveType as keyof typeof ClaveLabel
+  ] as keyof typeof selectedNote;
 
   if (!positionProperty || !selectedNote[positionProperty]) {
     throw new Error(`Propriedade de posição inválida para clave ${claveType}`);
@@ -266,7 +274,9 @@ const validateIntervalNote = (
 
   const targetPosition = allPositionNotas[targetIndex];
   const selectedNote = notas[noteIndex];
-  const claveProperty = ClaveLabel[claveType] as keyof typeof selectedNote;
+  const claveProperty = ClaveLabel[
+    claveType as keyof typeof ClaveLabel
+  ] as keyof typeof selectedNote;
 
   if (!selectedNote[claveProperty]) return false;
 
