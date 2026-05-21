@@ -7,7 +7,11 @@
       Cifra:
       <badge>{{ isCifra ? 'sim' : 'não' }}</badge>
     </p>
-    <p class="cursor-pointer m-0" @click="handleToggleDifficulty">
+    <p
+      v-if="currentDifficulty"
+      class="cursor-pointer m-0"
+      @click="handleToggleDifficulty"
+    >
       Dificuldade:
       <badge>{{ currentDifficulty.text }}</badge>
     </p>
@@ -38,7 +42,7 @@ interface Props {
   isCifra: boolean;
   hasVolume: boolean;
   hasAnswer: boolean;
-  currentDifficulty: { value: string; text: string; description: string };
+  currentDifficulty?: { value: string; text: string; description: string };
 }
 
 interface Emits {
