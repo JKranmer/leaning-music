@@ -100,7 +100,7 @@
             </div>
             <div class="text-gray-300 text-center text-sm">
               Acorde {{ currentGameIndex + 1 }}/{{ allChords.length }}:
-              {{ getCurrentChordName() }} Maior ({{ currentChord[0]?.name }},
+              {{ getCurrentChordName() }} ({{ currentChord[0]?.name }},
               {{ currentChord[1]?.name }}, {{ currentChord[2]?.name }})
             </div>
           </div>
@@ -134,8 +134,8 @@ import NotesButtonGroup from '@/components/NotesButtonGroup.vue';
 
 import SvgIcon from '@jamescoyle/vue-icon';
 import { mdilPlay } from '@mdi/light-js';
-import { useSequencyNotes } from '@/hooks/useSequencyNotes';
-import { notas, ClaveLabel } from '@/common/AllPositionNotas';
+import { useSequencyNotes } from '@/hooks/useSequencyNotes.js';
+import { notas, ClaveLabel } from '@/common/AllPositionNotas.js';
 
 // Tipo para uma nota musical
 interface Note {
@@ -158,7 +158,9 @@ const {
 } = useSequencyNotes();
 
 // Estado da validação
-const validationResult = ref<{ isValid: boolean; error?: string } | null>(null);
+const validationResult = ref<{ isValid: boolean; error?: string } | undefined>(
+  undefined,
+);
 
 // Acorde atual do jogo
 const currentChord = ref<Note[]>([]);
@@ -230,7 +232,9 @@ const generateBasicChords = () => {
     positions: number[];
     tonicNote: Note;
   }[] = [];
-  const claveKey = ClaveLabel[typeClave.value.value] as keyof Note;
+  const claveKey = ClaveLabel[
+    typeClave.value.value as keyof typeof ClaveLabel
+  ] as keyof Note;
 
   // Função auxiliar para encontrar a posição mais próxima menor
   const findClosestLowerPosition = (
@@ -315,7 +319,9 @@ const generateMediumChords = () => {
     positions: number[];
     tonicNote: Note;
   }[] = [];
-  const claveKey = ClaveLabel[typeClave.value.value] as keyof Note;
+  const claveKey = ClaveLabel[
+    typeClave.value.value as keyof typeof ClaveLabel
+  ] as keyof Note;
   const usedTonicas = new Set<string>(); // Para controlar tônicas já usadas
 
   basicChords.forEach(basicChord => {
@@ -465,7 +471,9 @@ const generateAllChords = () => {
     positions: number[];
     tonicNote: Note;
   }[] = [];
-  const claveKey = ClaveLabel[typeClave.value.value] as keyof Note;
+  const claveKey = ClaveLabel[
+    typeClave.value.value as keyof typeof ClaveLabel
+  ] as keyof Note;
 
   // Para cada nota como tônica
   notas.forEach((tonica, tonicaIndex) => {
@@ -488,26 +496,23 @@ const generateAllChords = () => {
     tonicaPositions.forEach(tonicaPos => {
       tercaPositions.forEach(tercaPos => {
         quintaPositions.forEach(quintaPos => {
-          // Verificar se as posições são diferentes e se a tônica é a mais alta
+          // Verificar se as posições são todas diferentes (aceita estado fundamental, 1ª e 2ª inversão)
           if (
             tonicaPos !== tercaPos &&
             tonicaPos !== quintaPos &&
             tercaPos !== quintaPos
           ) {
-            if (tonicaPos > tercaPos && tonicaPos > quintaPos) {
-              // tônica é a mais alta (maior valor)
-              const positions = [tonicaPos, tercaPos, quintaPos];
-              const positionsKey = positions.sort((a, b) => a - b).join(',');
+            const positions = [tonicaPos, tercaPos, quintaPos];
+            const positionsKey = positions.sort((a, b) => a - b).join(',');
 
-              // Verificar se esta combinação de posições já foi usada
-              if (!usedPositions.has(positionsKey)) {
-                usedPositions.add(positionsKey);
-                generatedChords.push({
-                  chord,
-                  positions: [tonicaPos, tercaPos, quintaPos],
-                  tonicNote: tonica,
-                });
-              }
+            // Verificar se esta combinação de posições já foi usada
+            if (!usedPositions.has(positionsKey)) {
+              usedPositions.add(positionsKey);
+              generatedChords.push({
+                chord,
+                positions: [tonicaPos, tercaPos, quintaPos],
+                tonicNote: tonica,
+              });
             }
           }
         });
@@ -585,14 +590,8 @@ const onSequenceNoteSelected = (noteIndex: number) => {
 };
 
 // Função wrapper para lidar com a emissão do GameContainer
-
 const handleValidateNoteFromContainer = (noteIndex: number) => {
-  // Esta função é chamada pelo GameContainer, mas não usamos os parâmetros gameState e claveType
-  // porque nossa lógica de validação é diferente
-  console.log(
-    'handleValidateNoteFromContainer chamada pelo GameContainer, noteIndex:',
-    noteIndex,
-  );
+  handleValidateNote(noteIndex);
 };
 
 // Validar se a nota selecionada é a tônica do acorde
@@ -623,7 +622,7 @@ const handleValidateNote = (noteIndex: number): void => {
 
   // Limpar resultado da validação
   setTimeout(() => {
-    validationResult.value = null;
+    validationResult.value = undefined;
   }, 500);
 };
 
