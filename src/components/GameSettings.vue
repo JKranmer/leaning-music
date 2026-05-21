@@ -21,6 +21,20 @@
         :path="hasVolume ? mdilVolumeHigh : mdilVolumeOff"
       ></svg-icon>
     </div>
+    <p
+      v-if="isIntervalMode !== undefined"
+      class="cursor-pointer m-0"
+      @click="handleToggleIntervalMode"
+    >
+      Modo: <badge>{{ isIntervalMode ? 'Intervalo' : 'Leitura' }}</badge>
+    </p>
+    <p
+      v-if="isIntervalMode && intervalFilter !== undefined"
+      class="cursor-pointer m-0"
+      @click="handleToggleIntervalFilter"
+    >
+      Intervalo: <badge>{{ intervalFilter }}</badge>
+    </p>
     <div @click="handleToggleAnswer" class="cursor-pointer p-4">
       <svg-icon type="mdi" :path="hasAnswer ? mdilEye : mdilEyeOff"></svg-icon>
     </div>
@@ -43,6 +57,8 @@ interface Props {
   hasVolume: boolean;
   hasAnswer: boolean;
   currentDifficulty?: { value: string; text: string; description: string };
+  isIntervalMode?: boolean;
+  intervalFilter?: string;
 }
 
 interface Emits {
@@ -51,6 +67,8 @@ interface Emits {
   (e: 'toggle-volume'): void;
   (e: 'toggle-answer'): void;
   (e: 'toggle-difficulty'): void;
+  (e: 'toggle-interval-mode'): void;
+  (e: 'toggle-interval-filter'): void;
 }
 
 defineProps<Props>();
@@ -61,4 +79,6 @@ const handleToggleCifra = () => emit('toggle-cifra');
 const handleToggleVolume = () => emit('toggle-volume');
 const handleToggleAnswer = () => emit('toggle-answer');
 const handleToggleDifficulty = () => emit('toggle-difficulty');
+const handleToggleIntervalMode = () => emit('toggle-interval-mode');
+const handleToggleIntervalFilter = () => emit('toggle-interval-filter');
 </script>

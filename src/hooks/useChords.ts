@@ -1,4 +1,11 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+
+const INTERVALS = [
+  { steps: 1, name: '2ª' },
+  { steps: 2, name: '3ª' },
+  { steps: 3, name: '4ª' },
+  { steps: 4, name: '5ª' },
+];
 
 export const useChords = () => {
   // CLAVE
@@ -32,10 +39,42 @@ export const useChords = () => {
     isCifra.value = !isCifra.value;
   };
 
+  // INTERVAL
+  const intervalFilter = ref<number | null>(null); // null = aleatório
+  const intervalFilterLabel = computed(() =>
+    intervalFilter.value === null
+      ? 'Aleatório'
+      : INTERVALS[intervalFilter.value].name,
+  );
+  const toggleIntervalFilter = () => {
+    intervalFilter.value =
+      intervalFilter.value === null
+        ? 0
+        : intervalFilter.value < INTERVALS.length - 1
+          ? intervalFilter.value + 1
+          : null;
+    // Aplica imediatamente o filtro
+    regenerateInterval();
+  };
+  const currentInterval = ref({
+    ...INTERVALS[Math.floor(Math.random() * INTERVALS.length)],
+  });
+  const regenerateInterval = () => {
+    const idx =
+      intervalFilter.value !== null
+        ? intervalFilter.value
+        : Math.floor(Math.random() * INTERVALS.length);
+    currentInterval.value = { ...INTERVALS[idx] };
+  };
+
   return {
     toggleClave,
     typeClave,
     toggleCifra,
     isCifra,
+    currentInterval,
+    regenerateInterval,
+    intervalFilterLabel,
+    toggleIntervalFilter,
   };
 };

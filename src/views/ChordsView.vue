@@ -28,10 +28,14 @@
               :is-cifra="isCifra"
               :has-volume="audio.hasVolume.value"
               :has-answer="gameSettings.hasAnswer.value"
+              :is-interval-mode="isIntervalMode"
+              :interval-filter="intervalFilterLabel"
               @toggle-clave="toggleClave"
               @toggle-cifra="toggleCifra"
               @toggle-volume="audio.toggleVolume"
               @toggle-answer="gameSettings.toggleAnswer"
+              @toggle-interval-mode="toggleIntervalMode"
+              @toggle-interval-filter="toggleIntervalFilter"
             />
 
             <ScoreBoard
@@ -47,6 +51,16 @@
                 )
               "
             />
+            <div
+              v-if="isIntervalMode && gameState.isStart.value"
+              class="text-white text-center mt-3 text-base"
+            >
+              Qual nota está uma
+              <strong class="text-primary-300">{{
+                currentInterval.name
+              }}</strong>
+              acima da nota na pauta?
+            </div>
           </div>
           <div
             class="flex flex-wrap w-full box-border justify-center gap-8 border-2 border-primary-900 rounded-lg pt-12 pb-4 pl-4 pr-4 sm:px-12 sm:py-8 bg-primary-900 my-12"
@@ -107,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import GameContainer from '@/components/GameContainer.vue';
 import MusicalNote from '@/components/MusicalNote.vue';
 import ChordsType from '@/components/ChordsType.vue';
@@ -121,7 +135,16 @@ import SvgIcon from '@jamescoyle/vue-icon';
 import { mdilPlay } from '@mdi/light-js';
 import { useChords } from '@/hooks/useChords';
 
-const { toggleClave, typeClave, toggleCifra, isCifra } = useChords();
+const {
+  toggleClave,
+  typeClave,
+  toggleCifra,
+  isCifra,
+  currentInterval,
+  regenerateInterval,
+  intervalFilterLabel,
+  toggleIntervalFilter,
+} = useChords();
 
 // Estado da validação
 const validationResult = ref<{ isValid: boolean; error?: string } | null>(null);
@@ -145,6 +168,14 @@ const VALIDATION_MODES = {
 } as const;
 
 const type_interval = ref(VALIDATION_MODES.CLAVE);
+const isIntervalMode = computed(
+  () => type_interval.value === VALIDATION_MODES.INTERVAL,
+);
+const toggleIntervalMode = () => {
+  type_interval.value = isIntervalMode.value
+    ? VALIDATION_MODES.CLAVE
+    : VALIDATION_MODES.INTERVAL;
+};
 
 // Função principal de validação chamada pelo GameContainer
 const handleValidateNote = (
@@ -155,9 +186,10 @@ const handleValidateNote = (
   const result = validateNoteSelection(noteIndex, gameState, claveType);
   validationResult.value = result;
 
-  // Limpar o resultado após processar
+  // Limpar o resultado após processar e regenerar intervalo para a próxima nota
   setTimeout(() => {
     validationResult.value = null;
+    if (isIntervalMode.value) regenerateInterval();
   }, 100);
 };
 
@@ -214,31 +246,32 @@ const validateClaveNote = (
   return validPositions.includes(currentPosition);
 };
 
-// Validação de intervalo - melhorada com melhor lógica
+// Validação de intervalo: mostra nota X na pauta, pergunta qual nota está N graus acima.
+// Array allPositionNotas está ordenado do mais agudo (índice 0) ao mais grave (índice 18).
+// Logo "acima" (pitch maior) = índice menor → targetIndex = currentIndex - steps.
+// As notas formam um ciclo (Do→Re→...→Si→Do), então usa-se módulo para wrap-around.
 const validateIntervalNote = (
   noteIndex: number,
   currentPosition: number,
   claveType: string,
 ): boolean => {
   const currentIndex = allPositionNotas.indexOf(currentPosition);
+  if (currentIndex === -1) return false;
 
-  if (currentIndex === -1) {
-    throw new Error('Posição atual não encontrada no array de posições');
-  }
+  // Wrap-around: se target < 0, volta ao final do array
+  const targetIndex =
+    (((currentIndex - currentInterval.value.steps) % allPositionNotas.length) +
+      allPositionNotas.length) %
+    allPositionNotas.length;
 
-  const previousIndex =
-    currentIndex === 0 ? allPositionNotas.length - 1 : currentIndex - 1;
-
-  const previousPosition = allPositionNotas[previousIndex];
+  const targetPosition = allPositionNotas[targetIndex];
   const selectedNote = notas[noteIndex];
   const claveProperty = ClaveLabel[claveType] as keyof typeof selectedNote;
 
-  if (!selectedNote[claveProperty]) {
-    throw new Error(`Propriedade ${claveProperty} não encontrada na nota`);
-  }
+  if (!selectedNote[claveProperty]) return false;
 
   const validPositions = selectedNote[claveProperty] as number[];
-  return validPositions.includes(previousPosition);
+  return validPositions.includes(targetPosition);
 };
 
 // Funções auxiliares
