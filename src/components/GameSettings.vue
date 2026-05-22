@@ -23,14 +23,18 @@
       Estado:
       <badge>{{ currentChordState.text }}</badge>
     </p>
-    <div @click="handleToggleVolume" class="cursor-pointer p-4">
+    <div
+      v-if="!currentChordState"
+      @click="handleToggleVolume"
+      class="cursor-pointer p-4"
+    >
       <svg-icon
         type="mdi"
         :path="hasVolume ? mdilVolumeHigh : mdilVolumeOff"
       ></svg-icon>
     </div>
     <p
-      v-if="isIntervalMode !== undefined"
+      v-if="!currentChordState"
       class="cursor-pointer m-0"
       @click="handleToggleIntervalMode"
     >

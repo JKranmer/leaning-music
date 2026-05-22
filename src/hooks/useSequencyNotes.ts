@@ -28,7 +28,7 @@ export const useSequencyNotes = () => {
   };
 
   // CIFRA
-  const isCifra = ref(true);
+  const isCifra = ref(false);
   const toggleCifra = () => {
     isCifra.value = !isCifra.value;
   };
@@ -110,9 +110,13 @@ export const useSequencyNotes = () => {
     if (!selectedNote) return false;
 
     // Verificar se alguma das posições da nota selecionada corresponde à posição tônica
-    return selectedNote[ClaveLabel[typeClave.value.value]].includes(
-      tonicPosition,
-    );
+    const claveKey =
+      ClaveLabel[typeClave.value.value as keyof typeof ClaveLabel];
+    const positions =
+      (selectedNote[claveKey as keyof typeof selectedNote] as
+        | number[]
+        | undefined) || [];
+    return positions.includes(tonicPosition);
   };
 
   return {

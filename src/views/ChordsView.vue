@@ -28,6 +28,7 @@
               :is-cifra="isCifra"
               :has-volume="audio.hasVolume.value"
               :has-answer="gameSettings.hasAnswer.value"
+              :is-start="gameState.isStart.value"
               :is-interval-mode="isIntervalMode"
               :interval-filter="intervalFilterLabel"
               @toggle-clave="toggleClave"

@@ -25,7 +25,7 @@ import { useGameSettings } from '@/hooks/useGameSettings.js';
 import { useGameState } from '@/hooks/useGameState.js';
 import { useNoteName } from '@/hooks/useNoteName.js';
 import { useKeyboardInput } from '@/hooks/useKeyboardInput.js';
-import { useChords } from '@/hooks/useChords';
+import { useChords } from '@/hooks/useChords.js';
 
 interface GameState {
   isGameActive: boolean;
@@ -135,6 +135,7 @@ const proceedToNextNote = (): void => {
 
     if (totalAttempts >= props.totalExercises) {
       timer.stopTimer();
+      gameState.isStart.value = false;
       gameState.messageEnd.value = true;
       return;
     }
@@ -149,6 +150,7 @@ const proceedToNextNote = (): void => {
 
   if (remainingNotes === 1) {
     timer.stopTimer();
+    gameState.isStart.value = false;
     gameState.messageEnd.value = true;
     return;
   }

@@ -34,7 +34,7 @@ export const useChords = () => {
   };
 
   // CIFRA
-  const isCifra = ref(true);
+  const isCifra = ref(false);
   const toggleCifra = () => {
     isCifra.value = !isCifra.value;
   };
