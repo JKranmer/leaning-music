@@ -1,5 +1,8 @@
 <template>
-  <div class="flex justify-center items-center gap-4 flex-wrap">
+  <div
+    class="flex justify-center items-center gap-4 flex-wrap"
+    :class="{ 'pointer-events-none opacity-40': isStart }"
+  >
     <p class="cursor-pointer m-0" @click="handleToggleClave">
       Clave de <badge>{{ typeClave.text }}</badge>
     </p>
@@ -68,6 +71,7 @@ interface Props {
   isCifra: boolean;
   hasVolume: boolean;
   hasAnswer: boolean;
+  isStart?: boolean;
   currentDifficulty?: { value: string; text: string; description: string };
   currentChordState?: { value: string; text: string; description: string };
   isIntervalMode?: boolean;
