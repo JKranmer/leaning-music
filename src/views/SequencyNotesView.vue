@@ -29,11 +29,13 @@
               :has-volume="audio.hasVolume.value"
               :has-answer="gameSettings.hasAnswer.value"
               :current-difficulty="currentDifficulty"
+              :current-chord-state="currentChordState"
               @toggle-clave="toggleClave"
               @toggle-cifra="toggleCifra"
               @toggle-volume="audio.toggleVolume"
               @toggle-answer="gameSettings.toggleAnswer"
               @toggle-difficulty="toggleDifficulty"
+              @toggle-chord-state="toggleChordState"
             />
 
             <ScoreBoard
@@ -92,18 +94,6 @@
               <svg-icon type="mdi" :path="mdilPlay"></svg-icon>
             </btn>
           </div>
-          <!-- Instrução para o jogador -->
-          <div v-if="gameState.isStart.value" class="mt-4">
-            <div class="text-white text-center mb-2">
-              Clique na <strong>tônica</strong> (nota principal) do acorde
-              mostrado na pauta
-            </div>
-            <div class="text-gray-300 text-center text-sm">
-              Acorde {{ currentGameIndex + 1 }}/{{ allChords.length }}:
-              {{ getCurrentChordName() }} ({{ currentChord[0]?.name }},
-              {{ currentChord[1]?.name }}, {{ currentChord[2]?.name }})
-            </div>
-          </div>
           <div
             v-show="
               gameState.messageEnd.value ||
@@ -155,6 +145,8 @@ const {
   isCifra,
   currentDifficulty,
   toggleDifficulty,
+  currentChordState,
+  toggleChordState,
 } = useSequencyNotes();
 
 // Estado da validação
@@ -202,7 +194,7 @@ const classOutPautaChord = computed(() => {
     // Posições muito baixas (abaixo da pauta)
     else if (position > 108) {
       hasBottomOut = true;
-      if (position > 122) {
+      if (position >= 122) {
         hasSecondLineBottom = true;
       }
     }
@@ -210,7 +202,7 @@ const classOutPautaChord = computed(() => {
 
   // Construir a classe baseada nas condições encontradas
   if (hasTopOut && hasBottomOut) {
-    result = 'out both';
+    result = 'out top bottom';
   } else if (hasTopOut) {
     result = 'out top';
   } else if (hasBottomOut) {
@@ -225,7 +217,23 @@ const classOutPautaChord = computed(() => {
   return result;
 });
 
+// Função para determinar o estado de um acorde
+// Sistema: valor maior = nota mais grave (nota no baixo)
+// Fundamental: tônicaPos é o maior valor
+// Inversão: tercaPos ou quintaPos é o maior valor (combina 1ª e 2ª inversão)
+const getChordState = (
+  tonicaPos: number,
+  tercaPos: number,
+  quintaPos: number,
+): 'fundamental' | 'inversion' => {
+  if (tonicaPos > tercaPos && tonicaPos > quintaPos) return 'fundamental';
+  return 'inversion';
+};
+
 // Função para gerar os 7 acordes básicos (nível fácil)
+// - Estado 'fundamental': 1 posição por acorde em estado fundamental = 7 exercícios
+// - Estado 'inversion': 2 posições por acorde (1ª + 2ª inversão) = 14 exercícios
+// - Estado 'all': 3 posições por acorde (fundamental + 1ª inversão + 2ª inversão) = 21 exercícios
 const generateBasicChords = () => {
   const basicChords: {
     chord: Note[];
@@ -236,18 +244,7 @@ const generateBasicChords = () => {
     typeClave.value.value as keyof typeof ClaveLabel
   ] as keyof Note;
 
-  // Função auxiliar para encontrar a posição mais próxima menor
-  const findClosestLowerPosition = (
-    targetPositions: number[],
-    referencePos: number,
-  ): number | null => {
-    const lowerPositions = targetPositions.filter(pos => pos < referencePos);
-    if (lowerPositions.length === 0) return null;
-    return Math.max(...lowerPositions);
-  };
-
-  // Os 7 acordes básicos: Dó, Ré, Mi, Fá, Sol, Lá, Si
-  // Para cada acorde: tônica, terça (posição mais próxima menor da tônica), quinta (posição mais próxima menor da terça)
+  // Os 7 acordes básicos (grãos da escala maior): tônica, terça, quinta
   const basicChordPatterns = [
     [0, 2, 4], // Dó-Mi-Sol
     [1, 3, 5], // Ré-Fá-Lá
@@ -258,63 +255,110 @@ const generateBasicChords = () => {
     [6, 1, 3], // Si-Ré-Fá
   ];
 
-  // Embaralhar os padrões de acordes para ordem aleatória
   const shuffledPatterns = [...basicChordPatterns].sort(
     () => Math.random() - 0.5,
   );
 
+  const mode = currentChordState.value.value;
+
   shuffledPatterns.forEach(pattern => {
     const [tonicaIndex, tercaIndex, quintaIndex] = pattern;
-
-    const chord = [
-      notas[tonicaIndex], // tônica
-      notas[tercaIndex], // terça
-      notas[quintaIndex], // quinta
-    ];
+    const chord = [notas[tonicaIndex], notas[tercaIndex], notas[quintaIndex]];
 
     const tonicaPositions = (notas[tonicaIndex][claveKey] as number[]) || [];
     const tercaPositions = (notas[tercaIndex][claveKey] as number[]) || [];
     const quintaPositions = (notas[quintaIndex][claveKey] as number[]) || [];
 
     if (
-      tonicaPositions.length > 0 &&
-      tercaPositions.length > 0 &&
-      quintaPositions.length > 0
-    ) {
-      // Para cada posição da tônica, encontrar a terça e quinta mais próximas menores
-      for (const tonicaPos of tonicaPositions) {
-        // Encontrar a posição da terça mais próxima menor da tônica
-        const tercaPos = findClosestLowerPosition(tercaPositions, tonicaPos);
+      !tonicaPositions.length ||
+      !tercaPositions.length ||
+      !quintaPositions.length
+    )
+      return;
 
-        if (tercaPos !== null) {
-          // Encontrar a posição da quinta mais próxima menor da terça
-          const quintaPos = findClosestLowerPosition(quintaPositions, tercaPos);
+    // Encontrar posições por estado
+    const fundamentalCombos: number[][] = [];
+    const inversionCombos: number[][] = [];
 
+    for (const tonicaPos of tonicaPositions) {
+      for (const tercaPos of tercaPositions) {
+        for (const quintaPos of quintaPositions) {
           if (
-            quintaPos !== null &&
             tonicaPos !== tercaPos &&
             tonicaPos !== quintaPos &&
             tercaPos !== quintaPos
           ) {
-            basicChords.push({
-              chord,
-              positions: [tonicaPos, tercaPos, quintaPos],
-              tonicNote: notas[tonicaIndex],
-            });
-            break; // Usar apenas a primeira combinação válida encontrada
+            const state = getChordState(tonicaPos, tercaPos, quintaPos);
+            if (state === 'fundamental') {
+              fundamentalCombos.push([tonicaPos, tercaPos, quintaPos]);
+            } else {
+              inversionCombos.push([tonicaPos, tercaPos, quintaPos]);
+            }
           }
         }
       }
     }
+
+    // Ordenar por compactação (menor spread)
+    const sortBySpread = (combos: number[][]) =>
+      combos.sort(
+        (a, b) =>
+          Math.max(...a) - Math.min(...a) - (Math.max(...b) - Math.min(...b)),
+      );
+
+    sortBySpread(fundamentalCombos);
+    sortBySpread(inversionCombos);
+
+    // Adicionar posições conforme o modo
+    if (mode === 'fundamental') {
+      if (fundamentalCombos.length > 0) {
+        basicChords.push({
+          chord,
+          positions: fundamentalCombos[0],
+          tonicNote: notas[tonicaIndex],
+        });
+      }
+    } else if (mode === 'inversion') {
+      // Adicionar até 2 inversões (1ª e 2ª)
+      for (let i = 0; i < Math.min(2, inversionCombos.length); i++) {
+        basicChords.push({
+          chord,
+          positions: inversionCombos[i],
+          tonicNote: notas[tonicaIndex],
+        });
+      }
+    } else if (mode === 'all') {
+      // Adicionar 1 fundamental + 2 inversões (ou menos se não houver)
+      if (fundamentalCombos.length > 0) {
+        basicChords.push({
+          chord,
+          positions: fundamentalCombos[0],
+          tonicNote: notas[tonicaIndex],
+        });
+      }
+      for (let i = 0; i < Math.min(2, inversionCombos.length); i++) {
+        basicChords.push({
+          chord,
+          positions: inversionCombos[i],
+          tonicNote: notas[tonicaIndex],
+        });
+      }
+    }
   });
+
+  // Embaralhar o array de acordes para aleatoriedade
+  for (let i = basicChords.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [basicChords[i], basicChords[j]] = [basicChords[j], basicChords[i]];
+  }
 
   return basicChords;
 };
 
-// Função para gerar nível médio - variações dos acordes básicos
-const generateMediumChords = () => {
-  const basicChords = generateBasicChords();
-  const mediumChords: {
+// Função para gerar exercícios adicionais do nível médio (complementam os básicos)
+// Mesmos 7 acordes básicos, mas em segunda oitava/posição
+const generateMediumOnlyChords = () => {
+  const mediumOnlyChords: {
     chord: Note[];
     positions: number[];
     tonicNote: Note;
@@ -322,137 +366,185 @@ const generateMediumChords = () => {
   const claveKey = ClaveLabel[
     typeClave.value.value as keyof typeof ClaveLabel
   ] as keyof Note;
-  const usedTonicas = new Set<string>(); // Para controlar tônicas já usadas
 
-  basicChords.forEach(basicChord => {
-    const { chord, tonicNote } = basicChord;
-    const [tonica, terca, quinta] = chord;
+  const mode = currentChordState.value.value;
 
-    // Pular se a tônica já foi usada
-    if (usedTonicas.has(tonicNote.name)) {
-      return;
-    }
+  // Os mesmos 7 acordes básicos
+  const basicChordPatterns = [
+    [0, 2, 4], // Dó-Mi-Sol
+    [1, 3, 5], // Ré-Fá-Lá
+    [2, 4, 6], // Mi-Sol-Si
+    [3, 5, 0], // Fá-Lá-Dó
+    [4, 6, 1], // Sol-Si-Ré
+    [5, 0, 2], // Lá-Dó-Mi
+    [6, 1, 3], // Si-Ré-Fá
+  ];
 
-    // Obter todas as posições possíveis para cada nota do acorde
-    const tonicaPositions = (tonica[claveKey] as number[]) || [];
-    const tercaPositions = (terca[claveKey] as number[]) || [];
-    const quintaPositions = (quinta[claveKey] as number[]) || [];
+  basicChordPatterns.forEach(pattern => {
+    const [tonicaIndex, tercaIndex, quintaIndex] = pattern;
+    const chord = [notas[tonicaIndex], notas[tercaIndex], notas[quintaIndex]];
 
-    // Função para encontrar a posição mais próxima
-    const findClosestPosition = (
-      positions: number[],
-      reference: number,
-      condition: (pos: number, ref: number) => boolean,
-    ): number | null => {
-      const validPositions = positions.filter(pos => condition(pos, reference));
-      if (validPositions.length === 0) return null;
+    const tonicaPositions = (notas[tonicaIndex][claveKey] as number[]) || [];
+    const tercaPositions = (notas[tercaIndex][claveKey] as number[]) || [];
+    const quintaPositions = (notas[quintaIndex][claveKey] as number[]) || [];
 
-      // Retornar a posição mais próxima (menor diferença absoluta)
-      return validPositions.reduce((closest, current) =>
-        Math.abs(current - reference) < Math.abs(closest - reference)
-          ? current
-          : closest,
-      );
-    };
+    // Pegar a segunda posição (índice 1) de cada nota
+    const tonicaPos = tonicaPositions[1];
+    const tercaPos = tercaPositions[1];
+    const quintaPos = quintaPositions[1];
 
-    // Caso 1: tônica > terça > quinta
-    tonicaPositions.forEach(tonicaPos => {
-      // Encontrar terça mais próxima menor que a tônica
-      const tercaPos = findClosestPosition(
-        tercaPositions,
-        tonicaPos,
-        (pos, ref) => pos < ref,
-      );
-      if (tercaPos !== null) {
-        // Encontrar quinta mais próxima menor que a terça
-        const quintaPos = findClosestPosition(
-          quintaPositions,
-          tercaPos,
-          (pos, ref) => pos < ref,
-        );
-        if (
-          quintaPos !== null &&
-          quintaPos !== tercaPos &&
-          quintaPos !== tonicaPos
-        ) {
-          mediumChords.push({
-            chord: [tonica, terca, quinta],
+    if (
+      tonicaPos !== undefined &&
+      tercaPos !== undefined &&
+      quintaPos !== undefined
+    ) {
+      if (
+        tonicaPos !== tercaPos &&
+        tonicaPos !== quintaPos &&
+        tercaPos !== quintaPos
+      ) {
+        const state = getChordState(tonicaPos, tercaPos, quintaPos);
+
+        // Filtrar por estado
+        if (mode === 'fundamental' && state === 'fundamental') {
+          mediumOnlyChords.push({
+            chord,
             positions: [tonicaPos, tercaPos, quintaPos],
-            tonicNote,
+            tonicNote: notas[tonicaIndex],
+          });
+        } else if (mode === 'inversion' && state === 'inversion') {
+          mediumOnlyChords.push({
+            chord,
+            positions: [tonicaPos, tercaPos, quintaPos],
+            tonicNote: notas[tonicaIndex],
+          });
+        } else if (mode === 'all') {
+          mediumOnlyChords.push({
+            chord,
+            positions: [tonicaPos, tercaPos, quintaPos],
+            tonicNote: notas[tonicaIndex],
           });
         }
       }
-    });
-
-    // Caso 2: quinta > tônica > terça
-    tonicaPositions.forEach(tonicaPos => {
-      // Encontrar quinta mais próxima maior que a tônica
-      const quintaPos = findClosestPosition(
-        quintaPositions,
-        tonicaPos,
-        (pos, ref) => pos > ref,
-      );
-      if (quintaPos !== null) {
-        // Encontrar terça mais próxima menor que a tônica
-        const tercaPos = findClosestPosition(
-          tercaPositions,
-          tonicaPos,
-          (pos, ref) => pos < ref,
-        );
-        if (
-          tercaPos !== null &&
-          tercaPos !== quintaPos &&
-          tercaPos !== tonicaPos
-        ) {
-          mediumChords.push({
-            chord: [quinta, tonica, terca],
-            positions: [quintaPos, tonicaPos, tercaPos],
-            tonicNote,
-          });
-        }
-      }
-    });
-
-    // Caso 3: terça > quinta > tônica
-    tonicaPositions.forEach(tonicaPos => {
-      // Encontrar quinta mais próxima maior que a tônica
-      const quintaPos = findClosestPosition(
-        quintaPositions,
-        tonicaPos,
-        (pos, ref) => pos > ref,
-      );
-      if (quintaPos !== null) {
-        // Encontrar terça mais próxima maior que a quinta
-        const tercaPos = findClosestPosition(
-          tercaPositions,
-          quintaPos,
-          (pos, ref) => pos > ref,
-        );
-        if (
-          tercaPos !== null &&
-          tercaPos !== quintaPos &&
-          tercaPos !== tonicaPos
-        ) {
-          mediumChords.push({
-            chord: [terca, quinta, tonica],
-            positions: [tercaPos, quintaPos, tonicaPos],
-            tonicNote,
-          });
-        }
-      }
-    });
-
-    // Marcar esta tônica como usada
-    usedTonicas.add(tonicNote.name);
+    }
   });
 
-  // Embaralhar o array de acordes
-  for (let i = mediumChords.length - 1; i > 0; i--) {
+  // Embaralhar
+  for (let i = mediumOnlyChords.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [mediumChords[i], mediumChords[j]] = [mediumChords[j], mediumChords[i]];
+    [mediumOnlyChords[i], mediumOnlyChords[j]] = [
+      mediumOnlyChords[j],
+      mediumOnlyChords[i],
+    ];
   }
 
-  return mediumChords;
+  return mediumOnlyChords;
+};
+
+// Função para gerar exercícios adicionais do nível difícil (complementam básicos + médios)
+// Mesmos 7 acordes básicos, mas em terceira oitava/posição
+const generateHardOnlyChords = () => {
+  const hardOnlyChords: {
+    chord: Note[];
+    positions: number[];
+    tonicNote: Note;
+  }[] = [];
+  const claveKey = ClaveLabel[
+    typeClave.value.value as keyof typeof ClaveLabel
+  ] as keyof Note;
+
+  const mode = currentChordState.value.value;
+
+  // Os mesmos 7 acordes básicos
+  const basicChordPatterns = [
+    [0, 2, 4], // Dó-Mi-Sol
+    [1, 3, 5], // Ré-Fá-Lá
+    [2, 4, 6], // Mi-Sol-Si
+    [3, 5, 0], // Fá-Lá-Dó
+    [4, 6, 1], // Sol-Si-Ré
+    [5, 0, 2], // Lá-Dó-Mi
+    [6, 1, 3], // Si-Ré-Fá
+  ];
+
+  basicChordPatterns.forEach(pattern => {
+    const [tonicaIndex, tercaIndex, quintaIndex] = pattern;
+    const chord = [notas[tonicaIndex], notas[tercaIndex], notas[quintaIndex]];
+
+    const tonicaPositions = (notas[tonicaIndex][claveKey] as number[]) || [];
+    const tercaPositions = (notas[tercaIndex][claveKey] as number[]) || [];
+    const quintaPositions = (notas[quintaIndex][claveKey] as number[]) || [];
+
+    // Pegar a terceira posição (índice 2) de cada nota
+    const tonicaPos = tonicaPositions[2];
+    const tercaPos = tercaPositions[2];
+    const quintaPos = quintaPositions[2];
+
+    if (
+      tonicaPos !== undefined &&
+      tercaPos !== undefined &&
+      quintaPos !== undefined
+    ) {
+      if (
+        tonicaPos !== tercaPos &&
+        tonicaPos !== quintaPos &&
+        tercaPos !== quintaPos
+      ) {
+        const state = getChordState(tonicaPos, tercaPos, quintaPos);
+
+        // Filtrar por estado
+        if (mode === 'fundamental' && state === 'fundamental') {
+          hardOnlyChords.push({
+            chord,
+            positions: [tonicaPos, tercaPos, quintaPos],
+            tonicNote: notas[tonicaIndex],
+          });
+        } else if (mode === 'inversion' && state === 'inversion') {
+          hardOnlyChords.push({
+            chord,
+            positions: [tonicaPos, tercaPos, quintaPos],
+            tonicNote: notas[tonicaIndex],
+          });
+        } else if (mode === 'all') {
+          hardOnlyChords.push({
+            chord,
+            positions: [tonicaPos, tercaPos, quintaPos],
+            tonicNote: notas[tonicaIndex],
+          });
+        }
+      }
+    }
+  });
+
+  // Embaralhar
+  for (let i = hardOnlyChords.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [hardOnlyChords[i], hardOnlyChords[j]] = [
+      hardOnlyChords[j],
+      hardOnlyChords[i],
+    ];
+  }
+
+  return hardOnlyChords;
+};
+
+// Função para gerar nível médio - variações dos acordes básicos
+const generateMediumChords = () => {
+  const basicChords = generateBasicChords();
+  const mediumOnlyChords = generateMediumOnlyChords();
+
+  // Combinar: básicos + médios (acumulativo)
+  const allMediumChords = [...basicChords, ...mediumOnlyChords];
+
+  // Embaralhar o array final
+  for (let i = allMediumChords.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allMediumChords[i], allMediumChords[j]] = [
+      allMediumChords[j],
+      allMediumChords[i],
+    ];
+  }
+
+  return allMediumChords;
 };
 
 // Função para gerar todos os acordes possíveis sem repetir posições (nível difícil)
@@ -465,70 +557,20 @@ const generateAllChords = () => {
     return generateMediumChords();
   }
 
-  const usedPositions = new Set<string>(); // Para controlar combinações já usadas
-  const generatedChords: {
-    chord: Note[];
-    positions: number[];
-    tonicNote: Note;
-  }[] = [];
-  const claveKey = ClaveLabel[
-    typeClave.value.value as keyof typeof ClaveLabel
-  ] as keyof Note;
+  const basicChords = generateBasicChords();
+  const mediumOnlyChords = generateMediumOnlyChords();
+  const hardOnlyChords = generateHardOnlyChords();
 
-  // Para cada nota como tônica
-  notas.forEach((tonica, tonicaIndex) => {
-    // Acorde maior: tônica, terça maior (2 semitons), quinta justa (4 semitons)
-    const tercaIndex = (tonicaIndex + 2) % notas.length;
-    const quintaIndex = (tonicaIndex + 4) % notas.length;
+  // Combinar: básicos + médios + difíceis (acumulativo)
+  const allChords = [...basicChords, ...mediumOnlyChords, ...hardOnlyChords];
 
-    const chord = [
-      notas[tonicaIndex], // tônica
-      notas[tercaIndex], // terça
-      notas[quintaIndex], // quinta
-    ];
-
-    // Obter todas as posições possíveis para cada nota do acorde
-    const tonicaPositions = (tonica[claveKey] as number[]) || [];
-    const tercaPositions = (notas[tercaIndex][claveKey] as number[]) || [];
-    const quintaPositions = (notas[quintaIndex][claveKey] as number[]) || [];
-
-    // Gerar todas as combinações possíveis de posições
-    tonicaPositions.forEach(tonicaPos => {
-      tercaPositions.forEach(tercaPos => {
-        quintaPositions.forEach(quintaPos => {
-          // Verificar se as posições são todas diferentes (aceita estado fundamental, 1ª e 2ª inversão)
-          if (
-            tonicaPos !== tercaPos &&
-            tonicaPos !== quintaPos &&
-            tercaPos !== quintaPos
-          ) {
-            const positions = [tonicaPos, tercaPos, quintaPos];
-            const positionsKey = positions.sort((a, b) => a - b).join(',');
-
-            // Verificar se esta combinação de posições já foi usada
-            if (!usedPositions.has(positionsKey)) {
-              usedPositions.add(positionsKey);
-              generatedChords.push({
-                chord,
-                positions: [tonicaPos, tercaPos, quintaPos],
-                tonicNote: tonica,
-              });
-            }
-          }
-        });
-      });
-    });
-  });
-
-  // Embaralhar o array de acordes
-  for (let i = generatedChords.length - 1; i > 0; i--) {
+  // Embaralhar o array final
+  for (let i = allChords.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [generatedChords[i], generatedChords[j]] = [
-      generatedChords[j],
-      generatedChords[i],
-    ];
+    [allChords[i], allChords[j]] = [allChords[j], allChords[i]];
   }
-  return generatedChords;
+
+  return allChords;
 };
 
 // const levelTwo = (basicChords: {

@@ -15,6 +15,14 @@
       Dificuldade:
       <badge>{{ currentDifficulty.text }}</badge>
     </p>
+    <p
+      v-if="currentChordState"
+      class="cursor-pointer m-0"
+      @click="handleToggleChordState"
+    >
+      Estado:
+      <badge>{{ currentChordState.text }}</badge>
+    </p>
     <div @click="handleToggleVolume" class="cursor-pointer p-4">
       <svg-icon
         type="mdi"
@@ -57,6 +65,7 @@ interface Props {
   hasVolume: boolean;
   hasAnswer: boolean;
   currentDifficulty?: { value: string; text: string; description: string };
+  currentChordState?: { value: string; text: string; description: string };
   isIntervalMode?: boolean;
   intervalFilter?: string;
 }
@@ -67,6 +76,7 @@ interface Emits {
   (e: 'toggle-volume'): void;
   (e: 'toggle-answer'): void;
   (e: 'toggle-difficulty'): void;
+  (e: 'toggle-chord-state'): void;
   (e: 'toggle-interval-mode'): void;
   (e: 'toggle-interval-filter'): void;
 }
@@ -79,6 +89,7 @@ const handleToggleCifra = () => emit('toggle-cifra');
 const handleToggleVolume = () => emit('toggle-volume');
 const handleToggleAnswer = () => emit('toggle-answer');
 const handleToggleDifficulty = () => emit('toggle-difficulty');
+const handleToggleChordState = () => emit('toggle-chord-state');
 const handleToggleIntervalMode = () => emit('toggle-interval-mode');
 const handleToggleIntervalFilter = () => emit('toggle-interval-filter');
 </script>

@@ -37,7 +37,7 @@ export const useSequencyNotes = () => {
   const difficultyLevels = [
     { value: 'easy', text: 'Fácil', description: '7 acordes principais' },
     { value: 'medium', text: 'Médio', description: 'Acordes com inversões' },
-    { value: 'hard', text: 'Difícil', description: 'Todos os acordes' },
+    // { value: 'hard', text: 'Difícil', description: 'Todos os acordes' },
   ];
   const currentDifficulty = ref(difficultyLevels[0]);
   const toggleDifficulty = () => {
@@ -46,6 +46,25 @@ export const useSequencyNotes = () => {
     );
     const nextIndex = (currentIndex + 1) % difficultyLevels.length;
     currentDifficulty.value = difficultyLevels[nextIndex];
+  };
+
+  // ESTADO DO ACORDE (Fundamental ou Inversão)
+  const chordStates = [
+    {
+      value: 'fundamental',
+      text: 'Fundamental',
+      description: 'Tônica no baixo',
+    },
+    { value: 'inversion', text: 'Inversão', description: '1ª + 2ª Inversão' },
+    { value: 'all', text: 'Todos', description: 'Fundamental + Inversão' },
+  ];
+  const currentChordState = ref(chordStates[2]); // Padrão: Todos
+  const toggleChordState = () => {
+    const currentIndex = chordStates.findIndex(
+      state => state.value === currentChordState.value.value,
+    );
+    const nextIndex = (currentIndex + 1) % chordStates.length;
+    currentChordState.value = chordStates[nextIndex];
   };
 
   // Acordes comuns de 3 notas (tríades)
@@ -106,5 +125,8 @@ export const useSequencyNotes = () => {
     currentDifficulty,
     toggleDifficulty,
     difficultyLevels,
+    currentChordState,
+    toggleChordState,
+    chordStates,
   };
 };
