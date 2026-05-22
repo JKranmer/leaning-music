@@ -122,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import GameContainer from '@/components/GameContainer.vue';
 import MusicalNote from '@/components/MusicalNote.vue';
 import ChordsType from '@/components/ChordsType.vue';
@@ -149,7 +149,12 @@ const {
   regenerateInterval,
   intervalFilterLabel,
   toggleIntervalFilter,
+  resetState,
 } = useChords();
+
+onMounted(() => {
+  resetState();
+});
 
 // Estado da validação
 const validationResult = ref<{ isValid: boolean; error?: string } | undefined>(
@@ -191,6 +196,42 @@ const handleValidateNote = (
   claveType: string,
 ): void => {
   const result = validateNoteSelection(noteIndex, gameState, claveType);
+
+  if (!result.isValid && !result.error) {
+    const selectedName = notas[noteIndex]?.name ?? '?';
+    const claveKey = ClaveLabel[
+      claveType as keyof typeof ClaveLabel
+    ] as keyof (typeof notas)[0];
+    if (type_interval.value === VALIDATION_MODES.CLAVE) {
+      const correct = notas.find(n =>
+        (n[claveKey] as number[] | undefined)?.includes(
+          gameState.currentPosition,
+        ),
+      );
+      console.error(
+        `Errou! Nota na pauta: "${correct?.name ?? '?'}" (pos: ${gameState.currentPosition}px) | Selecionado: "${selectedName}" | Correto: "${correct?.name ?? '?'}"`,
+      );
+    } else {
+      const claveKey2 = ClaveLabel[
+        claveType as keyof typeof ClaveLabel
+      ] as keyof (typeof notas)[0];
+      const currentNote = notas.find(n =>
+        (n[claveKey2] as number[] | undefined)?.includes(
+          gameState.currentPosition,
+        ),
+      );
+      const currentNoteIdx = currentNote ? notas.indexOf(currentNote) : -1;
+      const targetNoteIdx =
+        currentNoteIdx >= 0
+          ? (currentNoteIdx + currentInterval.value.steps) % notas.length
+          : -1;
+      const correctName = targetNoteIdx >= 0 ? notas[targetNoteIdx].name : '?';
+      console.error(
+        `Errou! Nota na pauta: "${currentNote?.name ?? '?'}" (pos: ${gameState.currentPosition}px) | Selecionado: "${selectedName}" | Correto (${currentInterval.value.name} acima): "${correctName}"`,
+      );
+    }
+  }
+
   validationResult.value = result;
 
   // Limpar o resultado após processar e regenerar intervalo para a próxima nota
@@ -255,34 +296,26 @@ const validateClaveNote = (
   return validPositions.includes(currentPosition);
 };
 
-// Validação de intervalo: mostra nota X na pauta, pergunta qual nota está N graus acima.
-// Array allPositionNotas está ordenado do mais agudo (índice 0) ao mais grave (índice 18).
-// Logo "acima" (pitch maior) = índice menor → targetIndex = currentIndex - steps.
-// As notas formam um ciclo (Do→Re→...→Si→Do), então usa-se módulo para wrap-around.
+// Validação de intervalo: abordagem diatônica — a Nª acima de uma nota
+// é calculada pelo nome da nota (7 notas no ciclo), não por posição física no array.
+// Ex: 7ª acima de Dó = Si (índice 0+6=6), independente de oitava.
 const validateIntervalNote = (
   noteIndex: number,
   currentPosition: number,
   claveType: string,
 ): boolean => {
-  const currentIndex = allPositionNotas.indexOf(currentPosition);
-  if (currentIndex === -1) return false;
-
-  // Wrap-around: se target < 0, volta ao final do array
-  const targetIndex =
-    (((currentIndex - currentInterval.value.steps) % allPositionNotas.length) +
-      allPositionNotas.length) %
-    allPositionNotas.length;
-
-  const targetPosition = allPositionNotas[targetIndex];
-  const selectedNote = notas[noteIndex];
   const claveProperty = ClaveLabel[
     claveType as keyof typeof ClaveLabel
-  ] as keyof typeof selectedNote;
+  ] as keyof (typeof notas)[0];
+  const currentNote = notas.find(n =>
+    (n[claveProperty] as number[] | undefined)?.includes(currentPosition),
+  );
+  if (!currentNote) return false;
 
-  if (!selectedNote[claveProperty]) return false;
-
-  const validPositions = selectedNote[claveProperty] as number[];
-  return validPositions.includes(targetPosition);
+  const currentNoteIndex = notas.indexOf(currentNote);
+  const targetNoteIndex =
+    (currentNoteIndex + currentInterval.value.steps) % notas.length;
+  return notas[noteIndex].name === notas[targetNoteIndex].name;
 };
 
 // Funções auxiliares

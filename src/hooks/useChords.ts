@@ -5,17 +5,26 @@ const INTERVALS = [
   { steps: 2, name: '3ª' },
   { steps: 3, name: '4ª' },
   { steps: 4, name: '5ª' },
+  { steps: 5, name: '6ª' },
+  { steps: 6, name: '7ª' },
 ];
+
+// Estado no nível de módulo (singleton) — compartilhado entre todas as instâncias
+const optionsClave = [
+  { value: 'sol', text: 'Sol', url: 'sol' },
+  { value: 'fa', text: 'Fá', url: 'fa' },
+  { value: 'do', text: 'Dó', url: 'do' },
+  { value: 'do-line-3', text: 'Dó3', url: 'do' },
+];
+const typeClave = ref(optionsClave[0]);
+const isCifra = ref(false);
+const intervalFilter = ref<number | null>(null);
+const currentInterval = ref({
+  ...INTERVALS[Math.floor(Math.random() * INTERVALS.length)],
+});
 
 export const useChords = () => {
   // CLAVE
-  const optionsClave = [
-    { value: 'sol', text: 'Sol', url: 'sol' },
-    { value: 'fa', text: 'Fá', url: 'fa' },
-    { value: 'do', text: 'Dó', url: 'do' },
-    { value: 'do-line-3', text: 'Dó3', url: 'do' },
-  ];
-  const typeClave = ref(optionsClave[0]);
   const toggleClave = () => {
     switch (typeClave.value.value) {
       case 'sol':
@@ -34,18 +43,23 @@ export const useChords = () => {
   };
 
   // CIFRA
-  const isCifra = ref(false);
   const toggleCifra = () => {
     isCifra.value = !isCifra.value;
   };
 
   // INTERVAL
-  const intervalFilter = ref<number | null>(null); // null = aleatório
   const intervalFilterLabel = computed(() =>
     intervalFilter.value === null
       ? 'Aleatório'
       : INTERVALS[intervalFilter.value].name,
   );
+  const regenerateInterval = () => {
+    const idx =
+      intervalFilter.value !== null
+        ? intervalFilter.value
+        : Math.floor(Math.random() * INTERVALS.length);
+    currentInterval.value = { ...INTERVALS[idx] };
+  };
   const toggleIntervalFilter = () => {
     intervalFilter.value =
       intervalFilter.value === null
@@ -53,18 +67,14 @@ export const useChords = () => {
         : intervalFilter.value < INTERVALS.length - 1
           ? intervalFilter.value + 1
           : null;
-    // Aplica imediatamente o filtro
     regenerateInterval();
   };
-  const currentInterval = ref({
-    ...INTERVALS[Math.floor(Math.random() * INTERVALS.length)],
-  });
-  const regenerateInterval = () => {
-    const idx =
-      intervalFilter.value !== null
-        ? intervalFilter.value
-        : Math.floor(Math.random() * INTERVALS.length);
-    currentInterval.value = { ...INTERVALS[idx] };
+
+  const resetState = () => {
+    typeClave.value = optionsClave[0];
+    isCifra.value = false;
+    intervalFilter.value = null;
+    regenerateInterval();
   };
 
   return {
@@ -75,6 +85,7 @@ export const useChords = () => {
     currentInterval,
     regenerateInterval,
     intervalFilterLabel,
+    resetState,
     toggleIntervalFilter,
   };
 };

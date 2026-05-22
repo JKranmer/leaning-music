@@ -655,9 +655,13 @@ const handleValidateNote = (noteIndex: number): void => {
 
   validationResult.value = { isValid };
 
-  console.log(
-    `Nota selecionada: ${selectedNote.name}, Tônica esperada: ${tonicNote.name}, Válida: ${isValid}`,
-  );
+  // if (!isValid) {
+  //   const chordNotes = currentGameChord.chord.map(n => n.name).join('-');
+  //   const positions = currentGameChord.positions.join(', ');
+  //   console.error(
+  //     `Errou! Acorde na pauta: "${chordNotes}" (pos: [${positions}]px) | T\u00f4nica: "${tonicNote.name}" | Selecionado: "${selectedNote.name}"`,
+  //   );
+  // }
 
   // Avançar para o próximo acorde após um delay
   nextChord();
